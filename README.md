@@ -1,4 +1,4 @@
-# katawrap: Add convenient features to KataGo analysis engine for the game Go.
+# katawrap: Add convenient features to KataGo analysis engine for the game Go
 
 This is just a wrapper script to extend [katago analysis](https://github.com/lightvector/KataGo/blob/v1.11.0/docs/Analysis_Engine.md) for casual use on the command line:
 
@@ -85,7 +85,7 @@ The following fields are supported in addition to the original ones.
 * `analyzeTurnsFrom`, `analyzeTurnsTo`, `analyzeTurnsEvery` (integer): Specify "turns from N", "turns to N", "N every turns" instead of `analyzeTurns`. Any of three fields can be combined. "To N" includes N itself ("from 70 to 80" = [70, 71, ..., 80]). The last turn after endgame is also included unless `analyzeTurnsTo` is specified explicitly.
 * `includeUnsettledness` (boolean): If true, report unsettledness (`includeOwnership` is turned on automatically). If not specified, defaults to true unless the option `-extra normal` is set. See the next section for details.
 
-Each line in STDIN is assumed as JSON if it starts with `{`, `sgf` if with '(;', or `sgfFile` otherwise. Some fixes are applied automatically:
+Each line in STDIN is assumed as JSON if it starts with `{`, `sgf` if with `(;`, or `sgfFile` otherwise. Some fixes are applied automatically:
 
 * The required fields `id`, `rules`, etc. are added if they are missing.
 * Turns outside the given `moves` are dropped from `analyzeTurns`.
