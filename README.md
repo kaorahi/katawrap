@@ -1,4 +1,4 @@
-# katawrap: Add convenient features to KataGo parallel analysis engine for the game Go.
+# katawrap: Add convenient features to KataGo analysis engine for the game Go.
 
 This is just a wrapper script to extend [katago analysis](https://github.com/lightvector/KataGo/blob/v1.11.0/docs/Analysis_Engine.md) for casual use on the command line:
 
@@ -12,7 +12,17 @@ $ ls *.sgf | katawrap.py ... | jq ...
 
 It can be used to find the most heated matches in your game collection, for example.
 
-## Examples
+## Table of contents
+
+* [Examples](#examples)
+* [Extension of queries](#queries)
+* [Extension of responses](#responses)
+* [Command line options](#options)
+* [Limitations at present](#limitations)
+* [Tips (KataGo server)](#tips)
+* [Misc.](#misc)
+
+## <a name="examples"></a>Examples
 
 As with original KataGo, katawrap receives JSON queries from STDIN and reports JSON responses to STDOUT. It also accepts a simplified query like
 
@@ -66,7 +76,7 @@ $ ls /foo/*.sgf \
        (map(.playedOrder) | (map(select(. != null and . < 3))|length) / length)]'
 ```
 
-## Extension of queries
+## <a name="queries"></a>Extension of queries
 
 The following fields are supported in addition to the original ones.
 
@@ -87,7 +97,7 @@ Aliases are also accepted:
 * `visits` = `maxVisits`
 * For `rules`, `cn` = `chinese`, `jp` = `japanese`, `kr` = `korean`, `nz` = `new-zealand`
 
-## Extension of responses
+## <a name="responses"></a>Extension of responses
 
 Responses are sorted in the order of requests and turn numbers by default. This feature is disabled by the option `-order arrival`.
 
@@ -109,7 +119,7 @@ Further more fields are added redundantly for '-extra excess'. This is the defau
 
 `moveInfos` is guaranteed to be sorted by `order`.
 
-## Command line options
+## <a name="options"></a>Command line options
 
 * -default JSON: Use this for missing fields in queries. (ex.) '{"komi": 5.5, "includePolicy": true}'
 * -override JSON: Override queries.
@@ -134,7 +144,7 @@ The following options are equivalent to `-override`. For example, `-komi 5.5` = 
 * -to TO
 * -every EVERY
 
-## Limitations at present
+## <a name="limitations"></a>Limitations at present
 
 * Only the main branch is analized in SGF.
 * Handicap stones (AB[], AW[]) are regarded as normal moves in SGF. Related to that, specification of the initial player (PL[]) is ignored in SGF.
@@ -142,7 +152,7 @@ The following options are equivalent to `-override`. For example, `-komi 5.5` = 
 * Error handlings are almost missing.
 * The fields and the options may be changed in future.
 
-## Tips (KataGo server)
+## <a name="tips"></a>Tips (KataGo server)
 
 You may want local KataGo server to save startup time when you use katawrap repeatedly. See `man netcat` for an easiest way on Linux. Example:
 
@@ -166,7 +176,7 @@ $ ls /foo/*.sgf \
 
 Note that KataGo keeps running even if you terminate the client with CTRL-C. You also need to terminate the server if you want to stop remaining search immediately.
 
-## Misc.
+## <a name="misc"></a>Misc.
 
 * tested with KataGo [1.11.0](https://github.com/lightvector/KataGo/releases/tag/v1.11.0).
 * SGF parser is copied from KaTrain [v1.12](https://github.com/sanderland/katrain/releases/tag/v1.12).
