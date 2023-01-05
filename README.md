@@ -81,7 +81,7 @@ $ ls /foo/*.sgf \
 The following fields are supported in addition to the original ones.
 
 * `sgf` (string): Specify SGF string instead of `moves`, `rules`, etc.
-* `sgfFile` (string): Specify the path of SGF file instead of `sgf`. Gzipped SGF is also accepted if the path ends with '.gz'.
+* `sgfFile` (string): Specify the path of SGF file instead of `sgf`. Gzipped SGF is also accepted if the path ends with '.gz'. Use the option `-disable-sgf-file` if you need to disable `sgfFile` for some security reason.
 * `analyzeTurnsFrom`, `analyzeTurnsTo`, `analyzeTurnsEvery` (integer): Specify "turns from N", "turns to N", "N every turns" instead of `analyzeTurns`. Any of three fields can be combined. "To N" includes N itself ("from 70 to 80" = [70, 71, ..., 80]). The last turn after endgame is also included unless `analyzeTurnsTo` is specified explicitly.
 * `includeUnsettledness` (boolean): If true, report unsettledness (`includeOwnership` is turned on automatically). If not specified, defaults to true unless the option `-extra normal` is set. See the next section for details.
 
@@ -132,6 +132,7 @@ Further more fields are added redundantly for '-extra excess'. This is the defau
   * `rich`: Add extra fields to responses.
   * `excess`: In addition to `rich`, copy the contents of some fields directly under the response. See the previous section for details.
 * -only-last: Analyze only the last turn when analyzeTurns is missing.
+* -disable-sgf-file: Do not support sgfFile in query.
 * -silent: Do not print progress info to stderr.
 * -debug: Print debug info to stderr.
 
@@ -144,6 +145,12 @@ The following options are equivalent to `-override`. For example, `-komi 5.5` = 
 * -to TO
 * -every EVERY
 
+Original KataGo is emulated to some extent by the following options.
+
+```sh
+katawrap.py -order arrival -extra normal -only-last -disable-sgf-file -silent
+```
+
 ## <a name="limitations"></a>Limitations at present
 
 * Only the main branch is analized in SGF.
@@ -151,6 +158,8 @@ The following options are equivalent to `-override`. For example, `-komi 5.5` = 
 * `reportDuringSearchEvery` and `action` are not supported in queries.
 * Error handlings are almost missing.
 * The fields and the options may be changed in future.
+
+Never consider to open "public katawrap server" as it accesses local files and shows their contents in error messages if `sgfFile` is specified in the query. Though there is the option `-disable-sgf-file`, it is not tested sufficiently.
 
 ## <a name="tips"></a>Tips (KataGo server)
 
