@@ -348,11 +348,14 @@ def cook_successive_pairs(former_pair, latter_pair):
 # errors
 
 def handle_invalid_response(response, when_error):
+    req = sorter.get_request_for(response)
     if is_error_response(response):
         give_up_queries_for_error_response(response, when_error)
         return True
+    if req is None:
+        when_error(f"Drop response with no corresponding query: {response}")
+        return True
     if is_warning_response(response):
-        req = sorter.get_request_for(response)
         when_error(f"Got warning (or unsupported): {response} for {req}")
     return False
 
