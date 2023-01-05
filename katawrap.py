@@ -238,8 +238,10 @@ rules_table = [
 ]
 
 def fix_rules(query):
-    rules = query['rules'].lower()
-    a = find_if(rules_table, lambda z: rules in z)
+    rules = query.get('rules')
+    if rules is None:
+        return
+    a = find_if(rules_table, lambda z: rules.lower() in z)
     if a:
         query['rules'] = a[0]
     else:
