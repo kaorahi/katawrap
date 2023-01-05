@@ -6,15 +6,13 @@ This is just a wrapper script to extend [katago analysis](https://github.com/lig
 $ ls *.sgf | katawrap.py ... | jq ...
 ```
 
-* Support SGF.
-* Sort the responses.
-* And more...
-
-It can be used to find the most heated matches in your game collection, for example.
+It can be used to find the most heated matches in your game collection, calculate the match rates with KataGo's top suggestions, and so on.
 
 ## Table of contents
 
 * [Examples](#examples)
+* [Overview](#overview)
+* [Download](#download)
 * [Extension of queries](#queries)
 * [Extension of responses](#responses)
 * [Command line options](#options)
@@ -24,7 +22,7 @@ It can be used to find the most heated matches in your game collection, for exam
 
 ## <a name="examples"></a>Examples
 
-As with original KataGo, katawrap receives JSON queries from STDIN and reports JSON responses to STDOUT. It also accepts a simplified query like
+As with original KataGo, katawrap receives JSONL ([JSON Lines](https://jsonlines.org/)) queries from STDIN and reports JSONL responses to STDOUT basically. It also accepts a simplified query like
 
 ```json
 {"sgfFile": "/foo/bar.sgf", "visits": 400, "every": 10}
@@ -59,9 +57,9 @@ $ ls /foo/*.sgf \
   | ./katawrap.py -visits 1 -every 20 \
       ./katago analysis -config analysis.cfg -model model.bin.gz \
   | jq -s 'map(select(0.3 < .winrate and .winrate < 0.7))
-    | map({sgfFile, turnNumber, winrate, scoreLead, unsettledness})
     | group_by(.sgfFile) | map(max_by(.unsettledness)) | sort_by(- .unsettledness)
-    | limit(5; .[])'
+    | limit(5; .[])
+    | {sgfFile, turnNumber, winrate, scoreLead, unsettledness}'
 ```
 
 Calculate the match rates with KataGo's top 3 suggestions in first 50 moves:
@@ -72,13 +70,32 @@ $ ls /foo/*.sgf \
       ./katago analysis -config analysis.cfg -model model.bin.gz \
   | jq -sc 'map(select(0 <= .turnNumber and .turnNumber < 50 and .playedColor != null))
     | group_by(.sgfFile)[] | group_by(.playedColor)[]
-    | [(.[0] | .sgfFile, (.sgfProp|.PB[0]+"(B) vs. "+.PW[0]+"(W)"), .playedColor),
-       (map(.playedOrder) | (map(select(. != null and . < 3))|length) / length)]'
+    | [(.[0] | .sgfFile, (.sgfProp|.PB[0]+"(B)", .PW[0]+"(W)"), .playedColor),
+       (map(.playedOrder) | (map(select(. < 3 and . != null))|length) / length)]'
 ```
+
+## <a name="overview"></a>Overview
+
+The main motivation of katawrap is batch analysis in simple pipe style:
+
+```sh
+$ ls *.sgf | katawrap.py ... | jq ...
+```
+
+For this purpose, katawrap provides several extensions to KataGo analysis engine.
+
+* Support SGF inputs.
+* Sort the responses.
+* Add extra fields to the responses, e.g. `sgfFile`, to pass on sufficient information for subsequent processing. This is the key for the above style.
+* Add further bonus outputs, e.g. unsettledness of the current board, the rank of the actually played move, etc.
+
+## <a name="download"></a>Download
+
+Just download a ZIP file from [github](https://github.com/kaorahi/katawrap) (green "Code" button at the top), unzip it, and use it. No installation or external libraries are required, but [KataGo](https://github.com/lightvector/KataGo/) itself must be set up in advance, of course. See the above examples for usage.
 
 ## <a name="queries"></a>Extension of queries
 
-The following fields are supported in addition to the original ones.
+The following fields are supported in addition to the original ones in JSON queries.
 
 * `sgf` (string): Specify SGF string instead of `moves`, `rules`, etc.
 * `sgfFile` (string): Specify the path of SGF file instead of `sgf`. Gzipped SGF is also accepted if the path ends with '.gz'. Use the option `-disable-sgf-file` if you need to disable `sgfFile` for some security reason.
@@ -89,7 +106,7 @@ Each line in STDIN is assumed as JSON if it starts with `{`, `sgf` if with `(;`,
 
 * The required fields `id`, `rules`, etc. are added if they are missing.
 * Turns outside the given `moves` are dropped from `analyzeTurns`.
-* By default, all turns are analyzed when `analyzeTurns`, `analyzeTurnsEvery`, etc. are completely missing. If the option `-only-last` is given, only the last turn is analyzed in such cases.
+* By default, all turns are analyzed when `analyzeTurns`, `analyzeTurnsEvery`, etc. are completely missing. If the option `-only-last` is given, only the last turn is analyzed as with original KataGo in such cases.
 
 Aliases are also accepted:
 
@@ -159,7 +176,7 @@ katawrap.py -order arrival -extra normal -only-last -disable-sgf-file -silent
 * Error handlings are almost missing.
 * The fields and the options may be changed in future.
 
-Never consider to open "public katawrap server" as it accesses local files and shows their contents in error messages if `sgfFile` is specified in the query. Though there is the option `-disable-sgf-file`, it is not tested sufficiently.
+Never consider to open "public katawrap server" as it accesses local files and may show their contents in error messages if `sgfFile` is given in the query. Though there is the option `-disable-sgf-file`, it is not tested sufficiently yet.
 
 ## <a name="tips"></a>Tips (KataGo server)
 
