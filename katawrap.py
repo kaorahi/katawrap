@@ -341,7 +341,7 @@ def handle_invalid_response(response, when_error):
         give_up_queries_for_error_response(response, when_error)
         return True
     if is_warning_response(response):
-        req = get_request_for(response)
+        req = sorter.get_request_for(response)
         when_error(f"Got warning (or unsupported): {response} for {req}")
     return False
 

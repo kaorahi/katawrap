@@ -22,6 +22,9 @@ class Sorter:
         self._res_pool.append(response)
         return self._pop_req_res_pairs()
 
+    def get_request_for(self, res):
+        return self._get_request_for(res)
+
     def pop_requests_by_id(self, i):
         requests = [req for req in self._req_pool if req['id'] == i]
         for req in requests:
