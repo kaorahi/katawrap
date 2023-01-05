@@ -348,15 +348,16 @@ def cook_successive_pairs(former_pair, latter_pair):
 # errors
 
 def handle_invalid_response(response, when_error):
-    req = sorter.get_request_for(response)
+    if is_unsupported_terminate_all(response):
+        return True  # drop silently
     if is_error_response(response):
         give_up_queries_for_error_response(response, when_error)
         return True
-    if req is None:
-        when_error(f"Drop response with no corresponding query: {response}")
-        return True
+    if is_ignorable_response(response):
+        return True  # drop silently
     if is_warning_response(response):
         when_error(f"Got warning (or unsupported): {response} for {req}")
+        return False
     return False
 
 def give_up_queries_for_error_response(response, when_error):
@@ -369,12 +370,21 @@ def give_up_queries_for_error_response(response, when_error):
     when_error(f"Got error (or unsupported): {response} for {first_req}")
 
 def is_error_response(response):
-    # 'action' is not supported
-    return 'error' in response or 'action' in response
+    return 'error' in response
 
 def is_warning_response(response):
-    # 'isDuringSearch' is not supported
-    return 'warning' in response or response.get('isDuringSearch')
+    return 'warning' in response
+
+def is_ignorable_response(response):
+    keys = ['action', 'noResults', 'isDuringSearch']
+    ignored_type = any(response.get(k) for k in keys)
+    no_corresponding_request = sorter.get_request_for(response) is None
+    return ignored_type or no_corresponding_request
+
+def is_unsupported_terminate_all(response):
+    # for KaTago 1.11.0
+    err = "'action' field must be 'query_version' or 'terminate'"
+    return response.get('error') == err
 
 ##############################################
 # SGF
@@ -466,8 +476,7 @@ def read_queries():
         with thread_lock:
             js = cook_query_json(line)
         for j in js:
-            debug_print(f"(to KATAGO): {j}")
-            katago_process.stdin.write((j + '\n').encode())
+            send_to_katago(j)
         katago_process.stdin.flush()
     with thread_lock:
         is_input_finished = True
@@ -484,11 +493,18 @@ def read_responses():
             print(j)
         sys.stdout.flush()
 
+def send_to_katago(line):
+    debug_print(f"(to KATAGO): {line}")
+    katago_process.stdin.write((line + '\n').encode())
+
 def in_progress():
     with thread_lock:
         alive =  katago_process.poll() is None
         done = is_input_finished and not sorter.has_requests()
         return alive and not done
+
+def terminate_all_queries():
+    send_to_katago(json.dumps({'id': new_id(), 'action': 'terminate_all'}))
 
 ##############################################
 # run
@@ -496,6 +512,7 @@ def in_progress():
 # initialize
 response_thread = threading.Thread(target=read_responses, daemon=True)
 response_thread.start()
+terminate_all_queries()  # cancel requests by previous client for safety
 
 # run
 read_queries()
