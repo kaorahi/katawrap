@@ -130,6 +130,8 @@ def cooked_query_for_katago(given_query, override_after_sgf):
     cook_sgf_file(query)
     extra = cook_sgf(query)
     query |= override_after_sgf
+    if not(has_valid_moves_field(query)):
+        return (query, extra)
     cook_alias(query)
     cook_analyze_turns_every(query)
     fix_analyze_turns(query)  # Joiner needs analyzeTurns.
@@ -245,14 +247,17 @@ def fix_rules(query):
 
 # misc.
 
+def has_valid_moves_field(query):
+    moves = query.get('moves')
+    return isinstance(moves, list) and moves
+
 def check_error_in_query(query):
     required = ['id', 'moves', 'rules', 'boardXSize', 'boardYSize']
     missing = [key for key in required if query.get(key) is None]
     if missing:
         return f"Missing keys {missing}"
-    moves = query['moves']
     err_maybe = [
-        not (isinstance(moves, list) and moves) and "invalid moves",
+        not has_valid_moves_field(query) and "invalid moves",
     ]
     err = [e for e in err_maybe if e]
     return err or None
