@@ -162,6 +162,7 @@ Further more fields are added redundantly for '-extra excess'. This is the defau
   * `rich`: Add extra fields to responses.
   * `excess`: In addition to `rich`, copy the contents of some fields directly under the response. See the previous section for details.
 * -max-requests MAX_REQUESTS: Suspend sending queries when pending requests exceeds this number. (default = 1000)
+* -sequentially: Do not read all input lines at once. This may be needed for very large inputs.
 * -only-last: Analyze only the last turn when analyzeTurns is missing.
 * -disable-sgf-file: Do not support sgfFile in query.
 * -netcat: Use this option when netcat (nc) is used as katago command. See [Tips](#tips).

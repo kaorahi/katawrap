@@ -47,6 +47,7 @@ if __name__ == "__main__":
     parser.add_argument('-order', help='"arrival", "sort" (default), or "join"', default='sort', required=False)
     parser.add_argument('-extra', help='"normal", "rich", or "excess" (default)', default='excess', required=False)
     parser.add_argument('-max-requests', type=int, help='suspend sending queries when pending requests exceeds this number', default=1000, required=False)
+    parser.add_argument('-sequentially', action='store_true', help='do not read all input lines at once')
     parser.add_argument('-only-last', action='store_true', help='analyze only the last turn when analyzeTurns is missing')
     parser.add_argument('-disable-sgf-file', action='store_true', help='do not support sgfFile in query')
     parser.add_argument('-netcat', action='store_true', help='use this option when netcat (nc) is used as katago command')
@@ -95,16 +96,6 @@ def cook_response(response, sorter):
     for req, res in pairs:
         cook_pair(req, res)
     return sorter.push_pairs_to_joiner(pairs)
-
-def print_progress(sorter):
-    if args['silent']:
-        return
-    rq, rs, j, done = sorter.count()
-    warn(f"{rq} waiting ({rs} pooled) / {j} to join / {done} done ... ", overwrite=True)
-
-def finish_print_progress(interrupted):
-    if not args['silent']:
-        warn('\nInterrupted.' if interrupted else 'All done.')
 
 ##############################################
 # cook query
@@ -377,6 +368,29 @@ def is_ignorable_response(response, sorter):
     return ignored_type or no_corresponding_request
 
 ##############################################
+# progress message
+
+progress_total = None
+progress_current = None
+
+def print_progress(sorter):
+    if args['silent']:
+        return
+    pi = progress_of_inputs()
+    rq, rs, j, done = sorter.count()
+    message = f"{pi}[res] wait={rq} pool={rs} join={j} done={done} ... "
+    warn(message, overwrite=True)
+
+def progress_of_inputs():
+    if progress_total is None or progress_current is None:
+        return ''
+    return f"[q] {progress_current}/{progress_total} "
+
+def finish_print_progress(interrupted):
+    if not args['silent']:
+        warn('\nInterrupted.' if interrupted else 'All done.')
+
+##############################################
 # SGF
 
 def parse_sgf(sgf):
@@ -470,17 +484,26 @@ cv = threading.Condition()
 is_input_finished = False
 
 def read_queries(katago_process, sorter):
-    global is_input_finished
+    global is_input_finished, progress_total, progress_current
     checker = jam_checker(args.get('max_requests'), sorter)
-    for raw_line in sys.stdin:
-        line = raw_line.strip()
-        debug_print(f"(from STDIN): {line}")
-        with cv:
-            cv.wait_for(checker)
-            js = cook_query_json(line, sorter)
-        for j in js:
-            send_to_katago(j, katago_process)
+    if args['sequentially']:
+        input_lines = sys.stdin
+    else:
+        input_lines = sys.stdin.readlines()
+        progress_total = len(input_lines)
+    for k, line in enumerate(input_lines):
+        progress_current = k + 1
+        cook_input_line(line, katago_process, sorter, checker)
     is_input_finished = True
+
+def cook_input_line(raw_line, katago_process, sorter, checker):
+    line = raw_line.strip()
+    debug_print(f"(from STDIN): {line}")
+    with cv:
+        cv.wait_for(checker)
+        js = cook_query_json(line, sorter)
+    for j in js:
+        send_to_katago(j, katago_process)
 
 def read_responses(katago_process, sorter):
     try:
