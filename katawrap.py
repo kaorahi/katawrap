@@ -162,15 +162,23 @@ def cook_sgf_file(query):
         warn(f"sgfFile is disabled by the option -disable-sgf-file: {sgf_file}")
         return
     opener = gzip.open if sgf_file.endswith('gz') else open
-    with opener(sgf_file, mode='rt', encoding='utf-8') as f:
-        sgf = f.read()
+    try:
+        with opener(sgf_file, mode='rt', encoding='utf-8') as f:
+            sgf = f.read()
+    except:
+        query['skipMe'] = f"Failed to read SGF file: {sgf_file}\n"
+        return
     query['sgf'] = sgf
 
 def cook_sgf(query):
     sgf = query.pop('sgf', None)
     if sgf is None:
         return {}
-    parsed, extra = parse_sgf(sgf)
+    try:
+        parsed, extra = parse_sgf(sgf)
+    except:
+        query['skipMe'] = f"Failed to parse SGF text: {sgf}\n"
+        return {}
     query |= parsed
     return extra
 
@@ -255,6 +263,10 @@ def has_valid_moves_field(query):
     return isinstance(moves, list) and moves
 
 def check_error_in_query(query):
+    skip_me = query.get('skipMe')
+    if skip_me:
+        del query['skipMe']
+        return skip_me
     required = ['id', 'moves', 'rules', 'boardXSize', 'boardYSize']
     missing = [key for key in required if query.get(key) is None]
     if missing:
