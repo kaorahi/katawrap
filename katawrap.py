@@ -342,7 +342,7 @@ def handle_invalid_response(response, sorter, error_reporter):
     if is_ignorable_response(response, sorter):
         return True  # drop silently
     if is_warning_response(response):
-        error_reporter(f"Got warning (or unsupported): {response} for {req}")
+        error_reporter(f"Got warning: {response} for {req}")
         return False
     return False
 
@@ -353,7 +353,7 @@ def give_up_queries_for_error_response(response, sorter, error_reporter):
         return
     requests = sorter.pop_requests_by_id(i)
     first_req = requests[0] if requests else '(No corresponding request)'
-    error_reporter(f"Got error (or unsupported): {response} for {first_req}")
+    error_reporter(f"Got error: {response} for {first_req}")
 
 def is_error_response(response):
     return 'error' in response
