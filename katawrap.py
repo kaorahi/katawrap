@@ -99,12 +99,12 @@ def cook_response(response, sorter):
 def print_progress(sorter):
     if args['silent']:
         return
-    rq, rs, j = sorter.count()
-    warn(f"{rq} requests ({rs} pooled) / {j} to join ... ", overwrite=True)
+    rq, rs, j, done = sorter.count()
+    warn(f"{rq} waiting ({rs} pooled) / {j} to join / {done} done ... ", overwrite=True)
 
 def finish_print_progress(interrupted):
     if not args['silent']:
-        warn('\nInterrupted.' if interrupted else 'Done.')
+        warn('\nInterrupted.' if interrupted else 'All done.')
 
 ##############################################
 # cook query
@@ -510,7 +510,7 @@ def jam_checker (max_requests, sorter):
     return lambda: ready(max_requests, sorter)
 
 def ready(max_requests, sorter):
-    rq, rs, j = sorter.count()
+    rq, rs, j, done = sorter.count()
     return rq <= max_requests
 
 ##############################################

@@ -6,9 +6,12 @@ class Joiner:
         self._join_pairs = join_pairs
         self._cook_successive_pairs = cook_successive_pairs
         self._pool = []
+        self._pop_count = 0
 
     def count(self):
-        return len(self._pool)
+        to_join = len(self._pool)
+        popped = self._pop_count
+        return (to_join, popped)
 
     def push_pairs(self, pairs):
         return sum([self._push_pair(p) for p in pairs], [])
@@ -19,18 +22,23 @@ class Joiner:
         if self._join_pairs:
             return self._pop_joined_responses()
         elif self._needs_successive_pair(pair):
-            return self._pop_responses_butlast()
+            return self._pop_responses(butlast=True)
         else:
-            return self._pop_all_responses()
+            return self._pop_responses()
 
-    def _pop_all_responses(self):
-        ret = self._pick_responses(self._pool)
-        self._pool.clear()
-        return ret
+    # pop
 
-    def _pop_responses_butlast(self):
-        ret = self._pick_responses(self._pool[0:-1])
-        del self._pool[0:-1]
+    def _pop_responses(self, butlast=False):
+        return self._pick_responses(self._pop_pairs(butlast))
+
+    def _pop_pairs(self, butlast=False):
+        lis = self._pool
+        n = len(lis)
+        stop = n - 1 if butlast else n
+        s = slice(0, stop)
+        ret = lis[s]
+        del lis[s]
+        self._pop_count += len(ret)
         return ret
 
     def _pick_responses(self, pairs):
@@ -62,8 +70,7 @@ class Joiner:
         last_req, last_res = self._pool[-1]
         is_finished = last_req['analyzeTurns'][-1] == last_res['turnNumber']
         if is_finished:
-            joined_response = self._join_pairs(self._pool)
-            self._pool.clear()
+            joined_response = self._join_pairs(self._pop_pairs())
             return [joined_response]
         else:
             return []
