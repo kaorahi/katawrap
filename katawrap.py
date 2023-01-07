@@ -466,17 +466,14 @@ def start_katago():
         stderr=sys.stderr,
     )
 
-katago_process = start_katago()
-
-def send_to_katago(line, flush=False, process=katago_process):
+def send_to_katago(line, process):
     debug_print(f"(to KATAGO): {line}")
     process.stdin.write((line + '\n').encode())
-    if flush:
-        process.stdin.flush()
+    process.stdin.flush()
 
-def terminate_all_queries(process=katago_process):
+def terminate_all_queries(process):
     terminate_all = json.dumps({'id': new_id(), 'action': 'terminate_all'})
-    send_to_katago(terminate_all, flush=True, process=process)
+    send_to_katago(terminate_all, process)
 
 ##############################################
 # main loop
@@ -485,7 +482,7 @@ thread_lock = threading.Lock()
 
 is_input_finished = False
 
-def read_queries():
+def read_queries(katago_process):
     global is_input_finished
     for raw_line in sys.stdin:
         line = raw_line.strip()
@@ -493,19 +490,21 @@ def read_queries():
         with thread_lock:
             js = cook_query_json(line)
         for j in js:
-            send_to_katago(j)
-        katago_process.stdin.flush()
+            send_to_katago(j, katago_process)
     with thread_lock:
         is_input_finished = True
 
-def read_responses():
+def make_response_reader(katago_process):
+    return lambda: read_responses(katago_process)
+
+def read_responses(katago_process):
     try:
-        do_read_responses()
+        do_read_responses(katago_process)
     except BrokenPipeError:
         pass
 
-def do_read_responses():
-    while in_progress():
+def do_read_responses(katago_process):
+    while in_progress(katago_process):
         line = katago_process.stdout.readline().decode().strip()
         if not line:
             continue
@@ -516,7 +515,7 @@ def do_read_responses():
             print(j)
         sys.stdout.flush()
 
-def in_progress():
+def in_progress(katago_process):
     with thread_lock:
         alive =  katago_process.poll() is None
         done = is_input_finished and not sorter.has_requests()
@@ -527,22 +526,26 @@ def in_progress():
 
 def run():
     interrupted = False
-    response_thread = initialize()
+    katago_process, response_thread = initialize()
     try:
-        read_queries()
+        read_queries(katago_process)
         response_thread.join()
     except KeyboardInterrupt:
         interrupted = True
     finally:
-        finalize(response_thread, interrupted)
+        finalize(katago_process, interrupted)
 
 def initialize():
-    response_thread = threading.Thread(target=read_responses, daemon=True)
+    katago_process = start_katago()
+    response_reader = make_response_reader(katago_process)
+    response_thread = threading.Thread(target=response_reader, daemon=True)
     response_thread.start()
-    terminate_all_queries()  # cancel requests by previous client for safety
-    return response_thread
+    # cancel requests by previous client for safety
+    # (needed only for -netcat actually)
+    terminate_all_queries(katago_process)
+    return katago_process, response_thread
 
-def finalize(response_thread, interrupted):
+def finalize(katago_process, interrupted):
     katago_process.stdin.close()
     katago_process.kill()
     finish_print_progress(interrupted)
