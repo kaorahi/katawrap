@@ -47,8 +47,8 @@ if __name__ == "__main__":
     parser.add_argument('-order', help='"arrival", "sort" (default), or "join"', default='sort', required=False)
     parser.add_argument('-extra', help='"normal", "rich", or "excess" (default)', default='excess', required=False)
     parser.add_argument('-only-last', action='store_true', help='analyze only the last turn when analyzeTurns is missing')
-    parser.add_argument('-silent', action='store_true', help='do not print progress info to stderr')
     parser.add_argument('-disable-sgf-file', action='store_true', help='do not support sgfFile in query')
+    parser.add_argument('-silent', action='store_true', help='do not print progress info to stderr')
     parser.add_argument('-debug', action='store_true', help='print debug info to stderr')
     parser.add_argument('katago-command', metavar='KATAGO_COMMAND', help='(ex.) ./katago analysis -config analysis.cfg -model model.bin.gz', nargs=argparse.REMAINDER)
 
