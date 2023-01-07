@@ -479,9 +479,6 @@ def read_queries(katago_process, sorter):
     with thread_lock:
         is_input_finished = True
 
-def make_response_reader(katago_process, sorter):
-    return lambda: read_responses(katago_process, sorter)
-
 def read_responses(katago_process, sorter):
     try:
         do_read_responses(katago_process, sorter)
@@ -523,8 +520,11 @@ def main():
 def initialize():
     katago_process = start_katago()
     sorter = make_sorter()
-    response_reader = make_response_reader(katago_process, sorter)
-    response_thread = threading.Thread(target=response_reader, daemon=True)
+    response_thread = threading.Thread(
+        target=read_responses,
+        args=(katago_process, sorter),
+        daemon=True,
+    )
     response_thread.start()
     if args['netcat']:
         # cancel requests by previous client for safety
