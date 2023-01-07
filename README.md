@@ -6,13 +6,13 @@ This is just a wrapper script to extend [katago analysis](https://github.com/lig
 $ ls *.sgf | katawrap.py ... | jq ...
 ```
 
-It can be used to find the most heated matches in your game collection, calculate the match rates with KataGo's top suggestions, and so on.
+It can be used to find the most heated games in your SGF collection, calculate the match rates with KataGo's top suggestions, and so on.
 
 ## Table of contents
 
 * [Examples](#examples)
-* [Overview](#overview)
 * [Download](#download)
+* [Overview](#overview)
 * [Extension of queries](#queries)
 * [Extension of responses](#responses)
 * [Command line options](#options)
@@ -38,16 +38,22 @@ By convenient extensions, you can analyze all your SGF files in this way:
 
 ```sh
 $ ls /foo/*.sgf \
-  | ./katawrap.py -visits 1 -every 100 \
+  | ./katawrap.py -visits 400 -every 10 \
       ./katago analysis -config analysis.cfg -model model.bin.gz \
-  | jq -r '[.sgfFile, .turnNumber, (.winrate*100|round)] | @csv'
-"/foo/a.sgf",0,45
-"/foo/a.sgf",100,23
-"/foo/a.sgf",200,2
-"/foo/a.sgf",267,0
-"/foo/b.sgf",0,46
-"/foo/b.sgf",100,67
-...
+  > data.jsonl
+$ python sample.py
+            sgfFile  turnNumber   winrate
+0      /foo/bar.sgf           0  0.461471
+1      /foo/bar.sgf          10  0.507684
+2      /foo/bar.sgf          20  0.516876
+...             ...         ...       ...
+```
+
+```python
+# sample.py
+import pandas as pd
+d = pd.read_json("./data.jsonl", lines=True)
+print(d[["sgfFile", "turnNumber", "winrate"]])
 ```
 
 Find the top 5 exciting games in your collection:
@@ -74,6 +80,10 @@ $ ls /foo/*.sgf \
        (map(.playedOrder) | (map(select(. < 3 and . != null))|length) / length)]'
 ```
 
+## <a name="download"></a>Download
+
+Just download a ZIP file from [github](https://github.com/kaorahi/katawrap) (green "Code" button at the top), unzip it, and use it. No installation or external libraries are required, but [KataGo](https://github.com/lightvector/KataGo/) itself must be set up in advance. See the above examples for usage.
+
 ## <a name="overview"></a>Overview
 
 The main motivation of katawrap is batch analysis in simple pipe style:
@@ -82,16 +92,19 @@ The main motivation of katawrap is batch analysis in simple pipe style:
 $ ls *.sgf | katawrap.py ... | jq ...
 ```
 
+Or equivalently:
+
+```sh
+$ ls *.sgf | katawrap.py ... > data.jsonl
+$ cat data.jsonl | jq ...
+```
+
 For this purpose, katawrap provides several extensions to KataGo analysis engine.
 
 * Support SGF inputs.
 * Sort the responses.
 * Add extra fields to the responses, e.g. `sgfFile`, to pass on sufficient information for subsequent processing. This is the key for the above style.
 * Add further bonus outputs, e.g. unsettledness of the current board, the rank of the actually played move, etc.
-
-## <a name="download"></a>Download
-
-Just download a ZIP file from [github](https://github.com/kaorahi/katawrap) (green "Code" button at the top), unzip it, and use it. No installation or external libraries are required, but [KataGo](https://github.com/lightvector/KataGo/) itself must be set up in advance, of course. See the above examples for usage.
 
 ## <a name="queries"></a>Extension of queries
 
@@ -120,13 +133,13 @@ Responses are sorted in the order of requests and turn numbers by default. This 
 
 The fields in responses are extended depending on the value of the option `-extra`. They are KataGo-compatible for `-extra normal`. Several fields are added for `-extra rich`:
 
+* `query`: Copy of the corresponding query (plus the following fields if `sgf` or `sgfFile` is given in the query)
+  * `sgf`: SGF text.
+  * `sgfProp`: SGF root properties. e.g. `{"PB": ["Intetsu"], "PW": ["Jowa"], ...}`
 * `playedMove`: Next move in GTP style, e.g. "D4". Does not exist at the last turn.
 * `playedColor`: Color of `playedMove` ("B" or "W").
 * `playedOrder`: The order of `playedMove` in `moveInfos` if exists.
 * `unsettledness`: The situation tend to be 'exciting' if this is greater than 20. It is defined as the sum of (1 - |ownership|) for all stones on the board. (It is indicated by red dots in the score chart in [LizGoban](https://github.com/kaorahi/lizgoban). [ref](https://github.com/sanderland/katrain/issues/215))
-* `query`: Copy of the corresponding query (plus the following fields if `sgf` or `sgfFile` is given in the query)
-  * `sgf`: SGF text.
-  * `sgfProp`: SGF root properties. e.g. `{"PB": ["Intetsu"], "PW": ["Jowa"], ...}`
 * `board`: 2D array of "X", "O", or "." for the current board.
 
 Further more fields are added redundantly for '-extra excess'. This is the default.
