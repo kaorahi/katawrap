@@ -8,7 +8,7 @@ class Sorter:
             sort=True,
             max_requests=1000,
             corresponding=nop,
-            when_error=nop,
+            error_reporter=nop,
             # for joiner
             join_pairs=None,
             cook_successive_pairs=None
@@ -16,7 +16,7 @@ class Sorter:
         self._sort = sort
         self._max_requests = max_requests
         self._corresponding = corresponding
-        self._when_error = when_error
+        self._error_reporter = error_reporter
         self._req_pool = []
         self._res_pool = []
         self._joiner = Joiner(
@@ -71,7 +71,7 @@ class Sorter:
         invalid_pairs = [p for p in pairs if not all(p)]
         for p in invalid_pairs:
             req, res = p
-            self._when_error(f"Unmatched: request={req} response={res}")
+            self._error_reporter(f"Unmatched: request={req} response={res}")
             pairs.remove(p)
         return pairs
 

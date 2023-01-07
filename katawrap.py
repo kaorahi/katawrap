@@ -100,14 +100,14 @@ def cook_response(response, sorter):
 ##############################################
 # cook query
 
-def cooked_queries_and_requests(orig_query, needs_extra, when_error):
+def cooked_queries_and_requests(orig_query, needs_extra, error_reporter):
     query = default | orig_query | override
     override_sgf = ['rules', 'komi']
     override_after_sgf = {k: override[k] for k in override_sgf if k in override.keys()}
     katago_query, extra = cooked_query_for_katago(query, override_after_sgf)
     err = check_error_in_query(katago_query)
     if err:
-        when_error(f"{err} in {katago_query} (from {query})")
+        error_reporter(f"{err} in {katago_query} (from {query})")
         return ([], [])
     additional = extra if needs_extra else {}
     requests = expand_query_turns(query | katago_query | additional)
@@ -335,25 +335,25 @@ def cook_successive_pairs(former_pair, latter_pair):
 
 # errors
 
-def handle_invalid_response(response, sorter, when_error):
+def handle_invalid_response(response, sorter, error_reporter):
     if is_error_response(response):
-        give_up_queries_for_error_response(response, sorter, when_error)
+        give_up_queries_for_error_response(response, sorter, error_reporter)
         return True
     if is_ignorable_response(response, sorter):
         return True  # drop silently
     if is_warning_response(response):
-        when_error(f"Got warning (or unsupported): {response} for {req}")
+        error_reporter(f"Got warning (or unsupported): {response} for {req}")
         return False
     return False
 
-def give_up_queries_for_error_response(response, sorter, when_error):
+def give_up_queries_for_error_response(response, sorter, error_reporter):
     i = response.get('id')
     if i is None:
-        when_error(f"Error (no 'id'): {response}")
+        error_reporter(f"Error (no 'id'): {response}")
         return
     requests = sorter.pop_requests_by_id(i)
     first_req = requests[0] if requests else '(No corresponding request)'
-    when_error(f"Got error (or unsupported): {response} for {first_req}")
+    error_reporter(f"Got error (or unsupported): {response} for {first_req}")
 
 def is_error_response(response):
     return 'error' in response
@@ -450,7 +450,7 @@ def make_sorter():
         sort=(order != 'arrival'),
         max_requests=args['max_requests'],
         corresponding=same_by(['id', 'turnNumber']),
-        when_error=warn,
+        error_reporter=warn,
         join_pairs=join_pairs if (order == 'join') else None,
         cook_successive_pairs=cook_successive_pairs if (order != 'arrival') else None,
     )
