@@ -486,7 +486,7 @@ def read_responses(katago_process, sorter):
     try:
         do_read_responses(katago_process, sorter)
     except BrokenPipeError:
-        pass
+        warn('BrokenPipe in response thread')
 
 def do_read_responses(katago_process, sorter):
     while in_progress(katago_process, sorter):
@@ -532,11 +532,15 @@ def initialize():
     return (katago_process, response_thread, sorter)
 
 def finalize(katago_process, interrupted):
-    katago_process.stdin.close()
-    katago_process.kill()
-    finish_print_progress(interrupted)
-    if interrupted:
-        finalize_interruption()
+    try:
+        katago_process.stdin.close()
+        katago_process.kill()
+        finish_print_progress(interrupted)
+    except BrokenPipeError:
+        warn('BrokenPipe in main thread')
+    finally:
+        if interrupted:
+            finalize_interruption()
 
 def finalize_interruption():
     if not args['netcat']:
