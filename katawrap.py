@@ -371,20 +371,19 @@ def is_ignorable_response(response, sorter):
 # progress message
 
 progress_total = None
-progress_current = None
+progress_current = 0
 
 def print_progress(sorter):
     if args['silent']:
         return
-    pi = progress_of_inputs()
-    rq, rs, j, done = sorter.count()
-    message = f"{pi}[res] wait={rq} pool={rs} join={j} done={done} ... "
+    q = progress_of_queries()
+    w, p, j, d = sorter.count()
+    message = f"[q] {q} [res] wait={w} pool={p} join={j} done={d} ... "
     warn(message, overwrite=True)
 
-def progress_of_inputs():
-    if progress_total is None or progress_current is None:
-        return ''
-    return f"[q] {progress_current}/{progress_total} "
+def progress_of_queries():
+    total = '' if progress_total is None else f"/{progress_total}"
+    return f"{progress_current}{total}"
 
 def finish_print_progress(interrupted):
     if not args['silent']:

@@ -31,10 +31,11 @@ class Sorter:
         return len(self._req_pool) < self._max_requests
 
     def count(self):
-        reqests = len(self._req_pool)
+        requests = len(self._req_pool)
         pooled = len(self._res_pool)
+        waiting = requests - pooled
         to_join, popped = self._joiner.count()
-        return (reqests, pooled, to_join, popped)
+        return (waiting, pooled, to_join, popped)
 
     def push_requests(self, requests):
         self._req_pool += requests
