@@ -161,6 +161,7 @@ Further more fields are added redundantly for '-extra excess'. This is the defau
   * `normal`: Only report the fields in responses of original KataGo.
   * `rich`: Add extra fields to responses.
   * `excess`: In addition to `rich`, copy the contents of some fields directly under the response. See the previous section for details.
+* -max-requests MAX_REQUESTS: Suspend sending queries when pending requests exceeds this number. (default = 1000)
 * -only-last: Analyze only the last turn when analyzeTurns is missing.
 * -disable-sgf-file: Do not support sgfFile in query.
 * -netcat: Use this option when netcat (nc) is used as katago command. See [Tips](#tips).

@@ -17,6 +17,7 @@ import json
 import subprocess
 import sys
 import threading
+import time
 import uuid
 
 from sorter import Sorter
@@ -45,6 +46,7 @@ if __name__ == "__main__":
     parser.add_argument('-every', type=int, help='equivalent to specification in -override', required=False)
     parser.add_argument('-order', help='"arrival", "sort" (default), or "join"', default='sort', required=False)
     parser.add_argument('-extra', help='"normal", "rich", or "excess" (default)', default='excess', required=False)
+    parser.add_argument('-max-requests', type=int, help='suspend sending queries when pending requests exceeds this number', default=1000, required=False)
     parser.add_argument('-only-last', action='store_true', help='analyze only the last turn when analyzeTurns is missing')
     parser.add_argument('-disable-sgf-file', action='store_true', help='do not support sgfFile in query')
     parser.add_argument('-netcat', action='store_true', help='use this option when netcat (nc) is used as katago command')
@@ -463,21 +465,22 @@ def terminate_all_queries(process):
 ##############################################
 # main loop
 
-thread_lock = threading.Lock()
+cv = threading.Condition()
 
 is_input_finished = False
 
 def read_queries(katago_process, sorter):
     global is_input_finished
+    checker = jam_checker(args.get('max_requests'), sorter)
     for raw_line in sys.stdin:
         line = raw_line.strip()
         debug_print(f"(from STDIN): {line}")
-        with thread_lock:
+        with cv:
+            cv.wait_for(checker)
             js = cook_query_json(line, sorter)
         for j in js:
             send_to_katago(j, katago_process)
-    with thread_lock:
-        is_input_finished = True
+    is_input_finished = True
 
 def read_responses(katago_process, sorter):
     try:
@@ -491,17 +494,24 @@ def do_read_responses(katago_process, sorter):
         if not line:
             continue
         debug_print(f"(from KATAGO): {line}")
-        with thread_lock:
+        with cv:
             js = cook_response_json(line, sorter)
+            cv.notify()
         for j in js:
             print(j)
         sys.stdout.flush()
 
 def in_progress(katago_process, sorter):
-    with thread_lock:
-        alive =  katago_process.poll() is None
-        done = is_input_finished and not sorter.has_requests()
-        return alive and not done
+    alive =  katago_process.poll() is None
+    done = is_input_finished and not sorter.has_requests()
+    return alive and not done
+
+def jam_checker (max_requests, sorter):
+    return lambda: ready(max_requests, sorter)
+
+def ready(max_requests, sorter):
+    rq, rs, j = sorter.count()
+    return rq <= max_requests
 
 ##############################################
 # run
