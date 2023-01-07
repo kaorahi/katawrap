@@ -509,7 +509,7 @@ def in_progress(katago_process, sorter):
 ##############################################
 # run
 
-def run():
+def main():
     interrupted = False
     katago_process, response_thread, sorter = initialize()
     try:
@@ -551,4 +551,4 @@ def finalize_interruption():
     another_netcat.stdin.close()
     warn('...Sent')
 
-run()
+main()
