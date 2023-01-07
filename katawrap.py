@@ -343,8 +343,6 @@ def cook_successive_pairs(former_pair, latter_pair):
 # errors
 
 def handle_invalid_response(response, sorter, when_error):
-    if is_unsupported_terminate_all(response):
-        return True  # drop silently
     if is_error_response(response):
         give_up_queries_for_error_response(response, sorter, when_error)
         return True
@@ -375,11 +373,6 @@ def is_ignorable_response(response, sorter):
     ignored_type = any(response.get(k) for k in keys)
     no_corresponding_request = sorter.get_request_for(response) is None
     return ignored_type or no_corresponding_request
-
-def is_unsupported_terminate_all(response):
-    # for KaTago 1.11.0
-    err = "'action' field must be 'query_version' or 'terminate'"
-    return response.get('error') == err
 
 ##############################################
 # SGF
@@ -533,9 +526,9 @@ def initialize():
     response_reader = make_response_reader(katago_process, sorter)
     response_thread = threading.Thread(target=response_reader, daemon=True)
     response_thread.start()
-    # cancel requests by previous client for safety
-    # (needed only for -netcat actually)
-    terminate_all_queries(katago_process)
+    if args['netcat']:
+        # cancel requests by previous client for safety
+        terminate_all_queries(katago_process)
     return (katago_process, response_thread, sorter)
 
 def finalize(katago_process, interrupted):

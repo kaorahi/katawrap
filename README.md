@@ -216,7 +216,7 @@ $ ls /foo/*.sgf \
 
 Note that KataGo keeps running even if you terminate the client with CTRL-C. You also need to terminate the server if you want to stop remaining search immediately.
 
-(When the option `-netcat` is given, katawrap tries to cancel remaining search by sending `terminate_all` action to KataGo. This action is not suported in current KataGo 1.11.0. [ref](https://github.com/lightvector/KataGo/issues/726))
+This problem is resolved by the option `-netcat` as above, but it needs newer KataGo (released after Jan 6 2023). KataGo 1.11.0 does not support it. ([ref](https://github.com/lightvector/KataGo/issues/726))
 
 ## <a name="misc"></a>Misc.
 
