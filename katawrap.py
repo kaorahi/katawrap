@@ -48,6 +48,7 @@ if __name__ == "__main__":
     parser.add_argument('-extra', help='"normal", "rich", or "excess" (default)', default='excess', required=False)
     parser.add_argument('-only-last', action='store_true', help='analyze only the last turn when analyzeTurns is missing')
     parser.add_argument('-disable-sgf-file', action='store_true', help='do not support sgfFile in query')
+    parser.add_argument('-netcat', action='store_true', help='use this option when netcat (nc) is used as katago command')
     parser.add_argument('-silent', action='store_true', help='do not print progress info to stderr')
     parser.add_argument('-debug', action='store_true', help='print debug info to stderr')
     parser.add_argument('katago-command', metavar='KATAGO_COMMAND', help='(ex.) ./katago analysis -config analysis.cfg -model model.bin.gz', nargs=argparse.REMAINDER)
@@ -105,9 +106,9 @@ def print_progress():
     j = joiner.count()
     warn(f"{rq} requests ({rs} pooled) / {j} to join ... ", overwrite=True)
 
-def finish_print_progress():
+def finish_print_progress(interrupted):
     if not args['silent']:
-        warn('Done.')
+        warn('\nInterrupted.' if interrupted else 'Done.')
 
 ##############################################
 # cook query
@@ -455,14 +456,30 @@ joiner = Joiner(
 )
 
 ##############################################
-# main loop
+# katago process
 
-katago_process = subprocess.Popen(
-    katago_command,
-    stdin=subprocess.PIPE,
-    stdout=subprocess.PIPE,
-    stderr=sys.stderr,
-)
+def start_katago():
+    return subprocess.Popen(
+        katago_command,
+        stdin=subprocess.PIPE,
+        stdout=subprocess.PIPE,
+        stderr=sys.stderr,
+    )
+
+katago_process = start_katago()
+
+def send_to_katago(line, flush=False, process=katago_process):
+    debug_print(f"(to KATAGO): {line}")
+    process.stdin.write((line + '\n').encode())
+    if flush:
+        process.stdin.flush()
+
+def terminate_all_queries(process=katago_process):
+    terminate_all = json.dumps({'id': new_id(), 'action': 'terminate_all'})
+    send_to_katago(terminate_all, flush=True, process=process)
+
+##############################################
+# main loop
 
 thread_lock = threading.Lock()
 
@@ -482,6 +499,12 @@ def read_queries():
         is_input_finished = True
 
 def read_responses():
+    try:
+        do_read_responses()
+    except BrokenPipeError:
+        pass
+
+def do_read_responses():
     while in_progress():
         line = katago_process.stdout.readline().decode().strip()
         if not line:
@@ -493,32 +516,46 @@ def read_responses():
             print(j)
         sys.stdout.flush()
 
-def send_to_katago(line):
-    debug_print(f"(to KATAGO): {line}")
-    katago_process.stdin.write((line + '\n').encode())
-
 def in_progress():
     with thread_lock:
         alive =  katago_process.poll() is None
         done = is_input_finished and not sorter.has_requests()
         return alive and not done
 
-def terminate_all_queries():
-    send_to_katago(json.dumps({'id': new_id(), 'action': 'terminate_all'}))
-
 ##############################################
 # run
 
-# initialize
-response_thread = threading.Thread(target=read_responses, daemon=True)
-response_thread.start()
-terminate_all_queries()  # cancel requests by previous client for safety
+def run():
+    interrupted = False
+    response_thread = initialize()
+    try:
+        read_queries()
+        response_thread.join()
+    except KeyboardInterrupt:
+        interrupted = True
+    finally:
+        finalize(response_thread, interrupted)
 
-# run
-read_queries()
+def initialize():
+    response_thread = threading.Thread(target=read_responses, daemon=True)
+    response_thread.start()
+    terminate_all_queries()  # cancel requests by previous client for safety
+    return response_thread
 
-# finalize
-if in_progress():
-    response_thread.join()
-katago_process.stdin.close()
-finish_print_progress()
+def finalize(response_thread, interrupted):
+    katago_process.stdin.close()
+    katago_process.kill()
+    finish_print_progress(interrupted)
+    if interrupted:
+        finalize_interruption()
+
+def finalize_interruption():
+    if not args['netcat']:
+        return
+    warn('Sending terminate_all...')
+    another_netcat = start_katago()
+    terminate_all_queries(another_netcat)
+    another_netcat.stdin.close()
+    warn('...Sent')
+
+run()

@@ -163,6 +163,7 @@ Further more fields are added redundantly for '-extra excess'. This is the defau
   * `excess`: In addition to `rich`, copy the contents of some fields directly under the response. See the previous section for details.
 * -only-last: Analyze only the last turn when analyzeTurns is missing.
 * -disable-sgf-file: Do not support sgfFile in query.
+* -netcat: Use this option when netcat (nc) is used as katago command. See [Tips](#tips).
 * -silent: Do not print progress info to stderr.
 * -debug: Print debug info to stderr.
 
@@ -209,11 +210,13 @@ $ cat /tmp/f \
 ```sh
 $ ls /foo/*.sgf \
   | ./katawrap.py -visits 1 -every 100 \
-      nc localhost 1234 \
+      -netcat nc localhost 1234 \
   | jq '{sgfFile, turnNumber, winrate}'
 ```
 
 Note that KataGo keeps running even if you terminate the client with CTRL-C. You also need to terminate the server if you want to stop remaining search immediately.
+
+(When the option `-netcat` is given, katawrap tries to cancel remaining search by sending `terminate_all` action to KataGo. This action is not suported in current KataGo 1.11.0. [ref](https://github.com/lightvector/KataGo/issues/726))
 
 ## <a name="misc"></a>Misc.
 
