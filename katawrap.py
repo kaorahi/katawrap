@@ -114,7 +114,7 @@ def cooked_queries_and_requests(orig_query, needs_extra, when_error):
     katago_query, extra = cooked_query_for_katago(query, override_after_sgf)
     err = check_error_in_query(katago_query)
     if err:
-        when_error(err)
+        when_error(f"{err} in {katago_query} (from {query})")
         return ([], [])
     additional = extra if needs_extra else {}
     requests = expand_query_turns(query | katago_query | additional)
@@ -258,7 +258,7 @@ def check_error_in_query(query):
     if missing:
         return f"Missing keys {missing}"
     err_maybe = [
-        not has_valid_moves_field(query) and "invalid moves",
+        not has_valid_moves_field(query) and "Invalid moves field",
     ]
     err = [e for e in err_maybe if e]
     return err or None
