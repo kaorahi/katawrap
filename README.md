@@ -3,7 +3,7 @@
 This is just a wrapper script to extend [katago analysis](https://github.com/lightvector/KataGo/blob/v1.11.0/docs/Analysis_Engine.md) for casual use on the command line:
 
 ```sh
-$ ls *.sgf | katawrap.py ... | jq ...
+$ ls *.sgf | katawrap.py ... > result.jsonl
 ```
 
 It can be used to find the most heated games in your SGF collection, calculate the match rates with KataGo's top suggestions, and so on.
@@ -34,13 +34,25 @@ instead of the original query:
 {"id": "1", "maxVisits": 400, "analyzeTurns": [0, 10, 20, ...], "moves": [["B", "D16"], ["W", "C17"], ...], "rules": "tromp-taylor", "komi": 7.5, "boardXSize": 19, "boardYSize": 19}
 ```
 
-By convenient extensions, you can analyze all your SGF files in this way:
+As a further extension, katawrap supports list of SGF files for its input. You can analyze all your SGF files in this way:
 
 ```sh
 $ ls /foo/*.sgf \
   | ./katawrap.py -visits 400 -every 10 \
       ./katago analysis -config analysis.cfg -model model.bin.gz \
-  > data.jsonl
+  > result.jsonl
+```
+
+Load the results in Python (Pandas):
+
+```python
+# sample.py
+import pandas as pd
+df = pd.read_json("./result.jsonl", lines=True)
+print(df[["sgfFile", "turnNumber", "winrate"]])
+```
+
+```sh
 $ python sample.py
             sgfFile  turnNumber   winrate
 0      /foo/bar.sgf           0  0.461471
@@ -49,11 +61,15 @@ $ python sample.py
 ...             ...         ...       ...
 ```
 
-```python
-# sample.py
-import pandas as pd
-d = pd.read_json("./data.jsonl", lines=True)
-print(d[["sgfFile", "turnNumber", "winrate"]])
+Select fields and convert them to CSV (with [jq](https://stedolan.github.io/jq/)):
+
+```sh
+$ cat result.jsonl \
+  | jq -r '[.sgfFile, .turnNumber, (.winrate*100|round)] | @csv'
+"/foo/bar.sgf",0,46
+"/foo/bar.sgf",10,51
+"/foo/bar.sgf",20,52
+...
 ```
 
 Find the top 5 exciting games in your collection:
@@ -95,8 +111,8 @@ $ ls *.sgf | katawrap.py ... | jq ...
 Or equivalently:
 
 ```sh
-$ ls *.sgf | katawrap.py ... > data.jsonl
-$ cat data.jsonl | jq ...
+$ ls *.sgf | katawrap.py ... > result.jsonl
+$ cat result.jsonl | jq ...
 ```
 
 For this purpose, katawrap provides several extensions to KataGo analysis engine.
@@ -110,9 +126,9 @@ For this purpose, katawrap provides several extensions to KataGo analysis engine
 
 The following fields are supported in addition to the original ones in JSON queries.
 
-* `sgf` (string): Specify SGF string instead of `moves`, `rules`, etc.
+* `sgf` (string): Specify SGF text instead of `moves`, `rules`, etc.
 * `sgfFile` (string): Specify the path of SGF file instead of `sgf`. Gzipped SGF is also accepted if the path ends with '.gz'. Use the option `-disable-sgf-file` if you need to disable `sgfFile` for some security reason.
-* `analyzeTurnsFrom`, `analyzeTurnsTo`, `analyzeTurnsEvery` (integer): Specify "turns from N", "turns to N", "N every turns" instead of `analyzeTurns`. Any of three fields can be combined. "To N" includes N itself ("from 70 to 80" = [70, 71, ..., 80]). The last turn after endgame is also included unless `analyzeTurnsTo` is specified explicitly.
+* `analyzeTurnsFrom`, `analyzeTurnsTo`, `analyzeTurnsEvery` (integer): Specify "turns from N", "turns to N", "N every turns" instead of `analyzeTurns`. Any of three fields can be combined. "To N" includes N itself ("from 70 to 80" = [70, 71, ..., 80]). The last turn after endgame is also included unless `analyzeTurnsTo` is specified explicitly. Set it as 999, for example, to disable this automatic inclusion.
 * `includeUnsettledness` (boolean): If true, report unsettledness (`includeOwnership` is turned on automatically). If not specified, defaults to true unless the option `-extra normal` is set. See the next section for details.
 
 Each line in STDIN is assumed as JSON if it starts with `{`, `sgf` if with `(;`, or `sgfFile` otherwise. Some fixes are applied automatically:
@@ -196,7 +212,7 @@ Never consider to open "public katawrap server" as it accesses local files and m
 
 ## <a name="tips"></a>Tips (KataGo server)
 
-You may want local KataGo server to save startup time when you use katawrap repeatedly. See `man netcat` for an easiest way on Linux. Example:
+You may want local KataGo server to save startup time when you use katawrap repeatedly. See `man netcat` for an easiest way on Linux (`apt install netcat` in Debian-based distributions). Example:
 
 (server)
 
@@ -216,9 +232,9 @@ $ ls /foo/*.sgf \
   | jq '{sgfFile, turnNumber, winrate}'
 ```
 
-Note that KataGo keeps running even if you terminate the client with CTRL-C. You also need to terminate the server if you want to stop remaining search immediately.
+Note that KataGo keeps running even if you terminate the client with CTRL-C. You also need to terminate the server if you want to stop remaining search immediately for KataGo 1.11.0.
 
-This problem is resolved by the option `-netcat` as above, but it needs newer KataGo (released after Jan 6 2023). KataGo 1.11.0 does not support it. ([ref](https://github.com/lightvector/KataGo/issues/726))
+This problem will be resolved with newer KataGo by the option `-netcat` as above. All requests are canceled by CTRL-C in this case and KataGo server can respond to new queries from another client soon. It will be supported from the next release of KataGo after Jan 7 2023. [ref](https://github.com/lightvector/KataGo/issues/726)
 
 ## <a name="misc"></a>Misc.
 
