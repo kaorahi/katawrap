@@ -6,12 +6,15 @@ class Sorter:
     def __init__(
             self,
             sort=True,
+            max_requests=1000,
             corresponding=nop,
             when_error=nop,
+            # for joiner
             join_pairs=None,
             cook_successive_pairs=None
     ):
         self._sort = sort
+        self._max_requests = max_requests
         self._corresponding = corresponding
         self._when_error = when_error
         self._req_pool = []
@@ -23,6 +26,9 @@ class Sorter:
 
     def has_requests(self):
         return bool(self._req_pool)
+
+    def has_room(self):
+        return len(self._req_pool) < self._max_requests
 
     def count(self):
         reqests = len(self._req_pool)

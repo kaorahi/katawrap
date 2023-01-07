@@ -449,6 +449,7 @@ def make_sorter():
     order = args['order']
     sorter = Sorter(
         sort=(order != 'arrival'),
+        max_requests=args['max_requests'],
         corresponding=same_by(['id', 'turnNumber']),
         when_error=warn,
         join_pairs=join_pairs if (order == 'join') else None,
@@ -479,13 +480,12 @@ def terminate_all_queries(process):
 ##############################################
 # main loop
 
-cv = threading.Condition()
+thread_condition = threading.Condition()
 
 is_input_finished = False
 
 def read_queries(katago_process, sorter):
     global is_input_finished, progress_total, progress_current
-    checker = jam_checker(args.get('max_requests'), sorter)
     if args['sequentially']:
         input_lines = sys.stdin
     else:
@@ -493,14 +493,14 @@ def read_queries(katago_process, sorter):
         progress_total = len(input_lines)
     for k, line in enumerate(input_lines):
         progress_current = k + 1
-        cook_input_line(line, katago_process, sorter, checker)
+        cook_input_line(line, katago_process, sorter)
     is_input_finished = True
 
-def cook_input_line(raw_line, katago_process, sorter, checker):
+def cook_input_line(raw_line, katago_process, sorter):
     line = raw_line.strip()
     debug_print(f"(from STDIN): {line}")
-    with cv:
-        cv.wait_for(checker)
+    with thread_condition:
+        thread_condition.wait_for(sorter.has_room)
         js = cook_query_json(line, sorter)
     for j in js:
         send_to_katago(j, katago_process)
@@ -517,9 +517,9 @@ def do_read_responses(katago_process, sorter):
         if not line:
             continue
         debug_print(f"(from KATAGO): {line}")
-        with cv:
+        with thread_condition:
             js = cook_response_json(line, sorter)
-            cv.notify()
+            thread_condition.notify()
         for j in js:
             print(j)
         sys.stdout.flush()
@@ -528,13 +528,6 @@ def in_progress(katago_process, sorter):
     alive =  katago_process.poll() is None
     done = is_input_finished and not sorter.has_requests()
     return alive and not done
-
-def jam_checker (max_requests, sorter):
-    return lambda: ready(max_requests, sorter)
-
-def ready(max_requests, sorter):
-    rq, rs, j, done = sorter.count()
-    return rq <= max_requests
 
 ##############################################
 # run
