@@ -128,18 +128,19 @@ The following fields are supported in addition to the original ones in JSON quer
 
 * `sgf` (string): Specify SGF text instead of `moves`, `rules`, etc.
 * `sgfFile` (string): Specify the path of SGF file instead of `sgf`. Gzipped SGF is also accepted if the path ends with '.gz'. Use the option `-disable-sgf-file` if you need to disable `sgfFile` for some security reason.
-* `analyzeTurnsFrom`, `analyzeTurnsTo`, `analyzeTurnsEvery` (integer): Specify "turns from N", "turns to N", "N every turns" instead of `analyzeTurns`. Any of three fields can be combined. "To N" includes N itself ("from 70 to 80" = [70, 71, ..., 80]). The last turn after endgame is also included unless `analyzeTurnsTo` is specified explicitly. Set it as 999, for example, to disable this automatic inclusion.
+* `analyzeTurnsFrom`, `analyzeTurnsTo`, `analyzeTurnsEvery` (integer): Specify "turns from N", "turns to N", "N every turns" instead of `analyzeTurns`. Any of three fields can be combined. "To N" includes N itself ("from 70 to 80" = [70, 71, ..., 80]).
+* `analyzeLastTurn` (boolean): Add the last turn after endgame to `analyzeTurns`.
 * `includeUnsettledness` (boolean): If true, report unsettledness (`includeOwnership` is turned on automatically). If not specified, defaults to true unless the option `-extra normal` is set. See the next section for details.
 
 Each line in STDIN is assumed as JSON if it starts with `{`, `sgf` if with `(;`, or `sgfFile` otherwise. Some fixes are applied automatically:
 
 * The required fields `id`, `rules`, etc. are added if they are missing.
 * Turns outside the given `moves` are dropped from `analyzeTurns`.
-* By default, all turns are analyzed when `analyzeTurns`, `analyzeTurnsEvery`, etc. are completely missing. If the option `-only-last` is given, only the last turn is analyzed as with original KataGo in such cases.
+* All turns are analyzed by default when `analyzeTurns`, `analyzeTurnsEvery`, etc. are completely missing. If the option `-only-last` is given, only the last turn is analyzed as with original KataGo in such cases.
 
 Aliases are also accepted:
 
-* `from`, `to`, `every` = `analyzeTurnsFrom`, `analyzeTurnsTo`, `analyzeTurnsEvery`
+* `from`, `to`, `every`, `last` = `analyzeTurnsFrom`, `analyzeTurnsTo`, `analyzeTurnsEvery`, `analyzeLastTurn`
 * `visits` = `maxVisits`
 * For `rules`, `cn` = `chinese`, `jp` = `japanese`, `kr` = `korean`, `nz` = `new-zealand`
 
@@ -193,6 +194,7 @@ The following options are equivalent to `-override`. For example, `-komi 5.5` = 
 * -from FROM
 * -to TO
 * -every EVERY
+* -last
 
 Original KataGo is emulated to some extent by the following options.
 

@@ -44,11 +44,11 @@ if __name__ == "__main__":
     parser.add_argument('-from', type=int, help='equivalent to specification in -override', required=False)
     parser.add_argument('-to', type=int, help='equivalent to specification in -override', required=False)
     parser.add_argument('-every', type=int, help='equivalent to specification in -override', required=False)
+    parser.add_argument('-last', action='store_true', help='equivalent to specification in -override')
     parser.add_argument('-order', help='"arrival", "sort" (default), or "join"', default='sort', required=False)
     parser.add_argument('-extra', help='"normal", "rich", or "excess" (default)', default='excess', required=False)
     parser.add_argument('-max-requests', type=int, help='suspend sending queries when pending requests exceeds this number', default=1000, required=False)
     parser.add_argument('-sequentially', action='store_true', help='do not read all input lines at once')
-    parser.add_argument('-only-last', action='store_true', help='analyze only the last turn when analyzeTurns is missing')
     parser.add_argument('-disable-sgf-file', action='store_true', help='do not support sgfFile in query')
     parser.add_argument('-netcat', action='store_true', help='use this option when netcat (nc) is used as katago command')
     parser.add_argument('-silent', action='store_true', help='do not print progress info to stderr')
@@ -59,7 +59,7 @@ if __name__ == "__main__":
     default_default = {} if args['extra'] == 'normal' else {'includeUnsettledness': True}
     default = default_default | parse_json(args['default'] or '{}')
     override = parse_json(args['override'] or '{}')
-    for key in ['komi', 'rules', 'visits', 'from', 'to', 'every']:
+    for key in ['komi', 'rules', 'visits', 'from', 'to', 'every', 'last']:
         val = args[key]
         if val is not None:
             override[key] = val
@@ -142,6 +142,7 @@ field_alias = {
     'from': 'analyzeTurnsFrom',
     'to': 'analyzeTurnsTo',
     'every': 'analyzeTurnsEvery',
+    'last': 'analyzeLastTurn',
     'visits': 'maxVisits',
 }
 
@@ -149,6 +150,7 @@ def cook_alias(query):
     for field, value in query.copy().items():
         original = field_alias.get(field)
         if original:
+        # if original is not None:
             del query[field]
             query[original] = value
 
@@ -181,15 +183,22 @@ def cook_analyze_turns_every(query):
     n = len(query['moves'])
     _or = lambda z, default: default if z is None else z
     turns = list(range(_or(fr, 0), _or(to, n) + 1, _or(every, 1)))
-    valid_last = (n in turns) or (to is not None)
-    query['analyzeTurns'] = turns if valid_last else turns + [n]
+    query['analyzeTurns'] = turns
 
 def fix_analyze_turns(query):
-    key = 'analyzeTurns'
+    orig = query.get('analyzeTurns') or []
     n = len(query['moves'])
-    if not key in query:
-        query[key] = [n] if args['only_last'] else list(range(0, n + 1))
-    query[key] = [t for t in query[key] if 0 <= t and t <= n]
+    if query.get('analyzeLastTurn'):
+        turns = append_if_missing(orig, n)
+    elif orig:
+        turns = orig
+    else:
+        turns = [n] if args['only_last'] else list(range(0, n + 1))
+    query['analyzeTurns'] = [t for t in turns if 0 <= t and t <= n]
+
+def append_if_missing(lis, elt):
+    warn(lis, elt)
+    return lis if elt in lis else lis + [elt]
 
 def upcase_moves_and_players(query):
     query['moves'] = [[player.upper(), move.upper()] for player, move in query['moves']]
