@@ -20,7 +20,6 @@ import threading
 import uuid
 
 from sorter import Sorter
-from joiner import Joiner
 from board import board_from_moves
 from util import find_if, warn, parse_json
 
@@ -70,40 +69,35 @@ if __name__ == "__main__":
 ##############################################
 # cook
 
-# set later
-sorter = None
-joiner = None
-
-def cook_json_to_jsonlist(func, line):
-    ret = [json.dumps(z) for z in func(parse_json(line))]
-    print_progress()
+def cook_json_to_jsonlist(func, line, sorter):
+    ret = [json.dumps(z) for z in func(parse_json(line), sorter)]
+    print_progress(sorter)
     return ret
 
-def cook_query_json(line):
-    return cook_json_to_jsonlist(cook_query, fill_placeholder(line))
+def cook_query_json(line, sorter):
+    return cook_json_to_jsonlist(cook_query, fill_placeholder(line), sorter)
 
-def cook_response_json(line):
-    return cook_json_to_jsonlist(cook_response, line)
+def cook_response_json(line, sorter):
+    return cook_json_to_jsonlist(cook_response, line, sorter)
 
-def cook_query(query):
+def cook_query(query, sorter):
     needs_extra = (args['extra'] != 'normal')
     katago_queries, requests = cooked_queries_and_requests(query, needs_extra, warn)
     sorter.push_requests(requests)
     return katago_queries
 
-def cook_response(response):
-    if handle_invalid_response(response, warn):
+def cook_response(response, sorter):
+    if handle_invalid_response(response, sorter, warn):
         return []
     pairs = sorter.push_response(response)
     for req, res in pairs:
         cook_pair(req, res)
-    return joiner.push_pairs(pairs)
+    return sorter.push_pairs_to_joiner(pairs)
 
-def print_progress():
+def print_progress(sorter):
     if args['silent']:
         return
-    rq, rs = sorter.count()
-    j = joiner.count()
+    rq, rs, j = sorter.count()
     warn(f"{rq} requests ({rs} pooled) / {j} to join ... ", overwrite=True)
 
 def finish_print_progress(interrupted):
@@ -348,20 +342,20 @@ def cook_successive_pairs(former_pair, latter_pair):
 
 # errors
 
-def handle_invalid_response(response, when_error):
+def handle_invalid_response(response, sorter, when_error):
     if is_unsupported_terminate_all(response):
         return True  # drop silently
     if is_error_response(response):
-        give_up_queries_for_error_response(response, when_error)
+        give_up_queries_for_error_response(response, sorter, when_error)
         return True
-    if is_ignorable_response(response):
+    if is_ignorable_response(response, sorter):
         return True  # drop silently
     if is_warning_response(response):
         when_error(f"Got warning (or unsupported): {response} for {req}")
         return False
     return False
 
-def give_up_queries_for_error_response(response, when_error):
+def give_up_queries_for_error_response(response, sorter, when_error):
     i = response.get('id')
     if i is None:
         when_error(f"Error (no 'id'): {response}")
@@ -376,7 +370,7 @@ def is_error_response(response):
 def is_warning_response(response):
     return 'warning' in response
 
-def is_ignorable_response(response):
+def is_ignorable_response(response, sorter):
     keys = ['action', 'noResults', 'isDuringSearch']
     ignored_type = any(response.get(k) for k in keys)
     no_corresponding_request = sorter.get_request_for(response) is None
@@ -442,18 +436,16 @@ def debug_print(message):
 ##############################################
 # sorter & joiner
 
-order = args['order']
-
-sorter = Sorter(
-    sort=(order != 'arrival'),
-    corresponding=same_by(['id', 'turnNumber']),
-    when_error=warn,
-)
-
-joiner = Joiner(
-    join_pairs=join_pairs if (order == 'join') else None,
-    cook_successive_pairs=cook_successive_pairs if (order != 'arrival') else None,
-)
+def make_sorter():
+    order = args['order']
+    sorter = Sorter(
+        sort=(order != 'arrival'),
+        corresponding=same_by(['id', 'turnNumber']),
+        when_error=warn,
+        join_pairs=join_pairs if (order == 'join') else None,
+        cook_successive_pairs=cook_successive_pairs if (order != 'arrival') else None,
+    )
+    return sorter
 
 ##############################################
 # katago process
@@ -482,40 +474,40 @@ thread_lock = threading.Lock()
 
 is_input_finished = False
 
-def read_queries(katago_process):
+def read_queries(katago_process, sorter):
     global is_input_finished
     for raw_line in sys.stdin:
         line = raw_line.strip()
         debug_print(f"(from STDIN): {line}")
         with thread_lock:
-            js = cook_query_json(line)
+            js = cook_query_json(line, sorter)
         for j in js:
             send_to_katago(j, katago_process)
     with thread_lock:
         is_input_finished = True
 
-def make_response_reader(katago_process):
-    return lambda: read_responses(katago_process)
+def make_response_reader(katago_process, sorter):
+    return lambda: read_responses(katago_process, sorter)
 
-def read_responses(katago_process):
+def read_responses(katago_process, sorter):
     try:
-        do_read_responses(katago_process)
+        do_read_responses(katago_process, sorter)
     except BrokenPipeError:
         pass
 
-def do_read_responses(katago_process):
-    while in_progress(katago_process):
+def do_read_responses(katago_process, sorter):
+    while in_progress(katago_process, sorter):
         line = katago_process.stdout.readline().decode().strip()
         if not line:
             continue
         debug_print(f"(from KATAGO): {line}")
         with thread_lock:
-            js = cook_response_json(line)
+            js = cook_response_json(line, sorter)
         for j in js:
             print(j)
         sys.stdout.flush()
 
-def in_progress(katago_process):
+def in_progress(katago_process, sorter):
     with thread_lock:
         alive =  katago_process.poll() is None
         done = is_input_finished and not sorter.has_requests()
@@ -526,9 +518,9 @@ def in_progress(katago_process):
 
 def run():
     interrupted = False
-    katago_process, response_thread = initialize()
+    katago_process, response_thread, sorter = initialize()
     try:
-        read_queries(katago_process)
+        read_queries(katago_process, sorter)
         response_thread.join()
     except KeyboardInterrupt:
         interrupted = True
@@ -537,13 +529,14 @@ def run():
 
 def initialize():
     katago_process = start_katago()
-    response_reader = make_response_reader(katago_process)
+    sorter = make_sorter()
+    response_reader = make_response_reader(katago_process, sorter)
     response_thread = threading.Thread(target=response_reader, daemon=True)
     response_thread.start()
     # cancel requests by previous client for safety
     # (needed only for -netcat actually)
     terminate_all_queries(katago_process)
-    return katago_process, response_thread
+    return (katago_process, response_thread, sorter)
 
 def finalize(katago_process, interrupted):
     katago_process.stdin.close()

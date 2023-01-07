@@ -1,19 +1,31 @@
 from util import find_if, nop
+from joiner import Joiner
 
 class Sorter:
 
-    def __init__(self, sort=True, corresponding=nop, when_error=nop):
+    def __init__(
+            self,
+            sort=True,
+            corresponding=nop,
+            when_error=nop,
+            join_pairs=None,
+            cook_successive_pairs=None
+    ):
         self._sort = sort
         self._corresponding = corresponding
         self._when_error = when_error
         self._req_pool = []
         self._res_pool = []
+        self._joiner = Joiner(
+            join_pairs=join_pairs,
+            cook_successive_pairs=cook_successive_pairs
+        )
 
     def has_requests(self):
         return bool(self._req_pool)
 
     def count(self):
-        return (len(self._req_pool), len(self._res_pool))
+        return (len(self._req_pool), len(self._res_pool), self._joiner.count())
 
     def push_requests(self, requests):
         self._req_pool += requests
@@ -21,6 +33,9 @@ class Sorter:
     def push_response(self, response):
         self._res_pool.append(response)
         return self._pop_req_res_pairs()
+
+    def push_pairs_to_joiner(self, pairs):
+        return self._joiner.push_pairs(pairs)
 
     def get_request_for(self, res):
         return self._get_request_for(res)
