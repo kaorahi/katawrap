@@ -98,7 +98,7 @@ $ ls /foo/*.sgf \
 
 ## <a name="download"></a>Download
 
-Just download a ZIP file from [github](https://github.com/kaorahi/katawrap) (green "Code" button at the top), unzip it, and use it. No installation or external libraries are required, but [KataGo](https://github.com/lightvector/KataGo/) itself must be set up in advance. See the above examples for usage.
+Just download a ZIP file from [github](https://github.com/kaorahi/katawrap) (green "Code" button at the top), unzip it, and use it. No installation or external libraries are required, but [KataGo](https://github.com/lightvector/KataGo/) itself must be set up in advance. See the above examples for usage. (Change file names and paths as appropriate for your case.)
 
 ## <a name="overview"></a>Overview
 
@@ -129,13 +129,13 @@ The following fields are supported in addition to the original ones in JSON quer
 * `sgf` (string): Specify SGF text instead of `moves`, `rules`, etc.
 * `sgfFile` (string): Specify the path of SGF file instead of `sgf`. Gzipped SGF is also accepted if the path ends with '.gz'. Use the option `-disable-sgf-file` if you need to disable `sgfFile` for some security reason.
 * `analyzeTurnsFrom`, `analyzeTurnsTo`, `analyzeTurnsEvery` (integer): Specify "turns from N", "turns to N", "N every turns" instead of `analyzeTurns`. Any of three fields can be combined. "To N" includes N itself ("from 70 to 80" = [70, 71, ..., 80]).
-* `analyzeLastTurn` (boolean): Add the last turn after endgame to `analyzeTurns`.
+* `analyzeLastTurn` (boolean): Add the endgame turn after the last move to `analyzeTurns`.
 * `includeUnsettledness` (boolean): If true, report unsettledness (`includeOwnership` is turned on automatically). If not specified, defaults to true unless the option `-extra normal` is set. See the next section for details.
 
 Each line in STDIN is assumed as JSON if it starts with `{`, `sgf` if with `(;`, or `sgfFile` otherwise. Some fixes are applied automatically:
 
 * The required fields `id`, `rules`, etc. are added if they are missing.
-* Turns outside the given `moves` are dropped from `analyzeTurns`.
+* Invalid turns outside the given `moves` are dropped from `analyzeTurns`.
 * All turns are analyzed by default when `analyzeTurns`, `analyzeTurnsEvery`, etc. are completely missing. If the option `-only-last` is given, only the last turn is analyzed as with original KataGo in such cases.
 
 Aliases are also accepted:
@@ -159,12 +159,14 @@ The fields in responses are extended depending on the value of the option `-extr
 * `unsettledness`: The situation tend to be 'exciting' if this is greater than 20. It is defined as the sum of (1 - |ownership|) for all stones on the board. (It is indicated by red dots in the score chart in [LizGoban](https://github.com/kaorahi/lizgoban). [ref](https://github.com/sanderland/katrain/issues/215))
 * `board`: 2D array of "X", "O", or "." for the current board.
 
-Further more fields are added redundantly for '-extra excess'. This is the default.
+Even more fields are added redundantly for '-extra excess'. This is the default.
 
 * `nextRootInfo`: Copy of the rootInfo of the next turn if it exists.
 * All fields in `rootInfo` and `query` are also copied directly under the response. This enables easy access in jq as `{turnNumber, winrate}` instead of `{turnNumber, winrate: .rootInfo.winrate}`.
 
 `moveInfos` is guaranteed to be sorted by `order`.
+
+If the option `-order join` is given, katawrap reports a joined response for each `id` instead of multiple responses with different `turnNumber` for the same `id`. It has the fields `{"id":..., "query":..., "responses":[...]}` and "responses" is the sorted array of the original responses.
 
 ## <a name="options"></a>Command line options
 
@@ -172,8 +174,8 @@ Further more fields are added redundantly for '-extra excess'. This is the defau
 * -override JSON: Override queries.
 * -order ORDER: One of `arrival`, `sort` (default), or `join`.
   * `arrival`: Do not sort the responses.
-  * `sort`: Sort the responses in the order of requests and turn numbers
-  * `join`: Report a joined response instead of multiple responses with different `turnNumber` for the same `id`. It has the fields `{"id":..., "query":..., "responses":[...]}` and "responses" is the sorted array of the original responses.
+  * `sort`: Sort the responses in the order of requests and turn numbers.
+  * `join`: Report a joined response for each `id`. See the previous section for details.
 * -extra EXTRA: One of `normal`, `rich`, or `excess` (default).
   * `normal`: Only report the fields in responses of original KataGo.
   * `rich`: Add extra fields to responses.
@@ -186,15 +188,17 @@ Further more fields are added redundantly for '-extra excess'. This is the defau
 * -silent: Do not print progress info to stderr.
 * -debug: Print debug info to stderr.
 
-The following options are equivalent to `-override`. For example, `-komi 5.5` = `-override '{"komi": 5.5}'`.
+The following options are equivalent to `-override`, e.g., `-komi 5.5` = `-override '{"komi": 5.5}'`.
 
 * -komi KOMI
 * -rules RULES: Short names 'cn', 'jp', 'kr', 'nz' are also accepted.
-* -visits VISITS
-* -from FROM
-* -to TO
-* -every EVERY
+* -visits MAX_VISITS
+* -from ANALYZE_TURNS_FROM
+* -to ANALYZE_TURNS_TO
+* -every ANALYZE_TURNS_EVERY
 * -last
+
+Set `-from 50 -every 10 -last` to analyze the turns 50, 60, 70, ... and the endgame after the last move, for example.
 
 Original KataGo is emulated to some extent by the following options.
 
@@ -204,10 +208,10 @@ katawrap.py -order arrival -extra normal -only-last -disable-sgf-file -silent
 
 ## <a name="limitations"></a>Limitations at present
 
-* Only the main branch is analized in SGF.
+* Only the main branch is analyzed in SGF.
 * Handicap stones (AB[], AW[]) are regarded as normal moves in SGF. Related to that, specification of the initial player (PL[]) is ignored in SGF.
 * `reportDuringSearchEvery` and `action` are not supported in queries.
-* Error handlings are almost missing.
+* Error handling is almost missing.
 * The fields and the options may be changed in future.
 
 Never consider to open "public katawrap server" as it accesses local files and may show their contents in error messages if `sgfFile` is given in the query. Though there is the option `-disable-sgf-file`, it is not tested sufficiently yet.
@@ -231,7 +235,7 @@ $ cat /tmp/f \
 $ ls /foo/*.sgf \
   | ./katawrap.py -visits 1 -every 100 \
       -netcat nc localhost 1234 \
-  | jq '{sgfFile, turnNumber, winrate}'
+  > result.jsonl
 ```
 
 Note that KataGo keeps running even if you terminate the client with CTRL-C. You also need to terminate the server if you want to stop remaining search immediately for KataGo 1.11.0.
