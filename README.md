@@ -149,7 +149,10 @@ The fields in responses are extended depending on the value of the option `-extr
   * `sgfProp`: SGF root properties. e.g. `{"PB": ["Intetsu"], "PW": ["Jowa"], ...}`
 * `nextMove`: Next move in GTP style, e.g. "D4". Does not exist at the last turn.
 * `nextMoveColor`: Color of `nextMove` ("B" or "W").
+* `nextMoveSign`: The sign corresponding to `nextMoveColor` (+1 for "B", -1 for "W")
 * `nextMoveRank`: The order of `nextMove` in `moveInfos` if exists.
+* `nextWinrateGain`: Difference of `winrate` before and after `nextMove` (> 0 if superior to AI).
+* `nextScoreGain`: Difference of `scoreLead` before and after `nextMove` (> 0 if superior to AI).
 * `unsettledness`: The situation tend to be 'exciting' if this is greater than 20. It is defined as the sum of (1 - |ownership|) for all stones on the board. (It is indicated by red dots in the score chart in [LizGoban](https://github.com/kaorahi/lizgoban). [ref](https://github.com/sanderland/katrain/issues/215))
 * `board`: 2D array of "X", "O", or "." for the current board.
 

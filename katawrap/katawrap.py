@@ -329,7 +329,13 @@ def next_move_etc(req, res):
     if n <= turn_number:
         return {}
     next_move_color, next_move = moves[turn_number]
-    ret = {'nextMoveColor': next_move_color, 'nextMove': next_move}
+    next_sign_for = {'B': +1, 'W': -1}
+    next_move_sign = next_sign_for.get(next_move_color.upper()) or 0
+    ret = {
+        'nextMove': next_move,
+        'nextMoveColor': next_move_color,
+        'nextMoveSign': next_move_sign,
+    }
     hit = find_if(res['moveInfos'], lambda z: z['move'] == next_move)
     if hit:
         ret['nextMoveRank'] = hit['order']
@@ -364,9 +370,15 @@ def join_pairs(pairs):
 def cook_successive_pairs(former_pair, latter_pair):
     if args['extra'] == 'normal':
         return
+    # rootInfo
     req0, res0 = former_pair
     req1, res1 = latter_pair
     res0['nextRootInfo'] = res1['rootInfo']
+    # gain
+    sign = res0['nextMoveSign']
+    gain = lambda key: (res1[key] - res0[key]) * sign
+    res0['nextWinrateGain'] = gain('winrate')
+    res0['nextScoreGain'] = gain('scoreLead')
 
 # errors
 
