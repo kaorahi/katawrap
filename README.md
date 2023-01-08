@@ -1,4 +1,4 @@
-# katawrap: Add convenient features to KataGo analysis engine for the game Go
+# katawrap: batch analyzer of the game Go powered by KataGo
 
 This is just a wrapper script to extend [katago analysis](https://github.com/lightvector/KataGo/blob/v1.11.0/docs/Analysis_Engine.md) for casual use on the command line:
 
@@ -7,6 +7,8 @@ $ ls *.sgf | katawrap.py ... > result.jsonl
 ```
 
 It can be used to find the most heated games in your SGF collection, calculate the match rates with KataGo's top suggestions, and so on.
+
+Let's leave the interaction with KataGo to katawrap and concentrate on analyzing the results.
 
 ## Table of contents
 
@@ -212,7 +214,7 @@ katawrap.py -order arrival -extra normal -only-last -disable-sgf-file -silent
 * Handicap stones (AB[], AW[]) are regarded as normal moves in SGF. Related to that, specification of the initial player (PL[]) is ignored in SGF.
 * `reportDuringSearchEvery` and `action` are not supported in queries.
 * Error handling is almost missing.
-* The fields and the options may be changed in future.
+* The fields and the options may be changed in future. (Check "incompatible change!" messages in git log.)
 
 Never consider to open "public katawrap server" as it accesses local files and may show their contents in error messages if `sgfFile` is given in the query. Though there is the option `-disable-sgf-file`, it is not tested sufficiently yet.
 
