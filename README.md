@@ -10,19 +10,22 @@ It can be used to find the most heated games in your SGF collection, calculate t
 
 Let's leave the interaction with KataGo to katawrap and concentrate on analyzing the results.
 
-## Table of contents
+* Introduction
+  * [Examples](#examples)
+  * [Download](#download)
+* Features
+  * [Overview](#overview)
+  * [Extension of queries](#queries)
+  * [Extension of responses](#responses)
+  * [Command line options](#options)
+  * [Limitations at present](#limitations)
+* Appendix
+  * [Tips (KataGo server)](#tips)
+  * [Misc.](#misc)
 
-* [Examples](#examples)
-* [Download](#download)
-* [Overview](#overview)
-* [Extension of queries](#queries)
-* [Extension of responses](#responses)
-* [Command line options](#options)
-* [Limitations at present](#limitations)
-* [Tips (KataGo server)](#tips)
-* [Misc.](#misc)
+## Introduction
 
-## <a name="examples"></a>Examples
+### <a name="examples"></a>Examples
 
 As with original KataGo, katawrap receives JSONL ([JSON Lines](https://jsonlines.org/)) queries from STDIN and reports JSONL responses to STDOUT basically. It also accepts a simplified query like
 
@@ -45,7 +48,7 @@ $ ls /foo/*.sgf \
   > result.jsonl
 ```
 
-### Load the results in Python (Pandas):
+#### Load the results in Python (Pandas):
 
 ```python
 import pandas as pd
@@ -59,7 +62,9 @@ print(df[['sgfFile', 'turnNumber', 'winrate']])
 # ...             ...         ...       ...
 ```
 
-Find the worst 5 blunders excluding those that have nothing to do with winning or losing.
+#### Find the worst 5 blunders excluding those that have nothing to do with winning or losing.
+
+(Continued from the previous example.)
 
 ```python
 blunders = df.query('nextWinrateGain < -0.1') \
@@ -76,7 +81,7 @@ print(blunders)
 
 See sample/ directory for more snippets in Jupyter notebook, e.g. finding the top 5 exciting games in your collection, calculating the match rates with KataGo's top 3 suggestions in first 50 moves.
 
-### Convert to CSV (with [jq](https://stedolan.github.io/jq/)):
+#### Convert to CSV (with [jq](https://stedolan.github.io/jq/)):
 
 ```sh
 $ cat result.jsonl \
@@ -87,11 +92,13 @@ $ cat result.jsonl \
 ...
 ```
 
-## <a name="download"></a>Download
+### <a name="download"></a>Download
 
 Just download a ZIP file from [github](https://github.com/kaorahi/katawrap) (green "Code" button at the top), unzip it, and use it. No installation or external libraries are required, but [KataGo](https://github.com/lightvector/KataGo/) itself must be set up in advance. See the above examples for usage. (Change file names and paths as appropriate for your case.)
 
-## <a name="overview"></a>Overview
+## Features
+
+### <a name="overview"></a>Overview
 
 The main motivation of katawrap is batch analysis in simple pipe style:
 
@@ -113,7 +120,7 @@ For this purpose, katawrap provides several extensions to KataGo analysis engine
 * Add extra fields to the responses, e.g. `sgfFile`, to pass on sufficient information for subsequent processing. This is the key for the above style.
 * Add further bonus outputs, e.g. unsettledness of the current board, the rank of the actually played move, etc.
 
-## <a name="queries"></a>Extension of queries
+### <a name="queries"></a>Extension of queries
 
 The following fields are supported in addition to the original ones in JSON queries.
 
@@ -135,7 +142,7 @@ Aliases are also accepted:
 * `visits` = `maxVisits`
 * For `rules`, `cn` = `chinese`, `jp` = `japanese`, `kr` = `korean`, `nz` = `new-zealand`
 
-## <a name="responses"></a>Extension of responses
+### <a name="responses"></a>Extension of responses
 
 Responses are sorted in the order of requests and turn numbers by default. This feature is disabled by the option `-order arrival`.
 
@@ -163,7 +170,7 @@ Even more fields are added redundantly for '-extra excess'. This is the default.
 
 If the option `-order join` is given, katawrap reports a joined response for each `id` instead of multiple responses with different `turnNumber` for the same `id`. It has the fields `{"id":..., "query":..., "responses":[...]}` and "responses" is the sorted array of the original responses.
 
-## <a name="options"></a>Command line options
+### <a name="options"></a>Command line options
 
 * -default JSON: Use this for missing fields in queries. (ex.) '{"komi": 5.5, "includePolicy": true}'
 * -override JSON: Override queries.
@@ -201,7 +208,7 @@ Original KataGo is emulated to some extent by the following options.
 katawrap.py -order arrival -extra normal -only-last -disable-sgf-file -silent
 ```
 
-## <a name="limitations"></a>Limitations at present
+### <a name="limitations"></a>Limitations at present
 
 * Only the main branch is analyzed in SGF.
 * Handicap stones (AB[], AW[]) are regarded as normal moves in SGF. Related to that, specification of the initial player (PL[]) is ignored in SGF.
@@ -211,7 +218,9 @@ katawrap.py -order arrival -extra normal -only-last -disable-sgf-file -silent
 
 Never consider to open "public katawrap server" as it accesses local files and may show their contents in error messages if `sgfFile` is given in the query. Though there is the option `-disable-sgf-file`, it is not tested sufficiently yet.
 
-## <a name="tips"></a>Tips (KataGo server)
+## Appendix
+
+### <a name="tips"></a>Tips (KataGo server)
 
 You may want local KataGo server to save startup time when you use katawrap repeatedly. See `man netcat` for an easiest way on Linux (`apt install netcat` in Debian-based distributions). Example:
 
@@ -235,7 +244,7 @@ $ ls /foo/*.sgf \
 
 Note that KataGo keeps running even if you terminate the client with CTRL-C. The above option `-netcat` is necessary to cancel requests soon in such cases. This is supported from KataGo 1.12.0. For KataGo 1.11.0, you need to terminate the server if you want to stop remaining search immediately.
 
-## <a name="misc"></a>Misc.
+### <a name="misc"></a>Misc.
 
 * tested with KataGo [1.12.0](https://github.com/lightvector/KataGo/releases/tag/v1.12.0).
 * SGF parser is copied from KaTrain [v1.12](https://github.com/sanderland/katrain/releases/tag/v1.12).
