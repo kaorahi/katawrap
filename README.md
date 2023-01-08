@@ -79,7 +79,7 @@ print(blunders)
 # ...
 ```
 
-See sample/ directory for more snippets in Jupyter notebook, e.g. finding the top 5 exciting games in your collection, calculating the match rates with KataGo's top 3 suggestions in first 50 moves.
+See sample/ directory for more snippets in a [sample Jupyter notebook](https://github.com/kaorahi/katawrap/blob/main/sample/sample.ipynb), e.g. finding the top 5 exciting games in your collection, calculating the match rates with KataGo's top 3 suggestions in first 50 moves.
 
 #### Convert to CSV (with [jq](https://stedolan.github.io/jq/)):
 
