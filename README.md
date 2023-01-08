@@ -84,10 +84,10 @@ Calculate the match rates with KataGo's top 3 suggestions in first 50 moves:
 
 ```sh
 $ cat result.jsonl \
-  | jq -sc 'map(select(0 <= .turnNumber and .turnNumber < 50 and .playedColor != null))
-    | group_by(.sgfFile)[] | group_by(.playedColor)[]
-    | [(.[0] | .sgfFile, .PB, .PW, .playedColor),
-       (map(.playedOrder) | (map(select(. < 3 and . != null))|length) / length)]'
+  | jq -sc 'map(select(0 <= .turnNumber and .turnNumber < 50 and .nextMoveColor != null))
+    | group_by(.sgfFile)[] | group_by(.nextMoveColor)[]
+    | [(.[0] | .sgfFile, .PB, .PW, .nextMoveColor),
+       (map(.nextMoveRank) | (map(select(. < 3 and . != null))|length) / length)]'
 ```
 
 ## <a name="download"></a>Download
@@ -147,9 +147,9 @@ The fields in responses are extended depending on the value of the option `-extr
 * `query`: Copy of the corresponding query (plus the following fields if `sgf` or `sgfFile` is given in the query)
   * `sgf`: SGF text.
   * `sgfProp`: SGF root properties. e.g. `{"PB": ["Intetsu"], "PW": ["Jowa"], ...}`
-* `playedMove`: Next move in GTP style, e.g. "D4". Does not exist at the last turn.
-* `playedColor`: Color of `playedMove` ("B" or "W").
-* `playedOrder`: The order of `playedMove` in `moveInfos` if exists.
+* `nextMove`: Next move in GTP style, e.g. "D4". Does not exist at the last turn.
+* `nextMoveColor`: Color of `nextMove` ("B" or "W").
+* `nextMoveRank`: The order of `nextMove` in `moveInfos` if exists.
 * `unsettledness`: The situation tend to be 'exciting' if this is greater than 20. It is defined as the sum of (1 - |ownership|) for all stones on the board. (It is indicated by red dots in the score chart in [LizGoban](https://github.com/kaorahi/lizgoban). [ref](https://github.com/sanderland/katrain/issues/215))
 * `board`: 2D array of "X", "O", or "." for the current board.
 

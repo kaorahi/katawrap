@@ -307,7 +307,7 @@ def add_extra_response(req, res):
     res |= excess | rich | res
 
 def rich_response(req, res):
-    rich = played_move_etc(req, res) | {
+    rich = next_move_etc(req, res) | {
         'query': req,
         'board': board_from_query(req),
     }
@@ -322,17 +322,17 @@ def cooked_sgf_prop(req):
         return {}
     return {k: ','.join(v) for k, v in sgf_prop.items()}
 
-def played_move_etc(req, res):
+def next_move_etc(req, res):
     moves = req['moves']
     turn_number = res['turnNumber']
     n = len(moves)
     if n <= turn_number:
         return {}
-    played_color, played_move = moves[turn_number]
-    ret = {'playedColor': played_color, 'playedMove': played_move}
-    hit = find_if(res['moveInfos'], lambda z: z['move'] == played_move)
+    next_move_color, next_move = moves[turn_number]
+    ret = {'nextMoveColor': next_move_color, 'nextMove': next_move}
+    hit = find_if(res['moveInfos'], lambda z: z['move'] == next_move)
     if hit:
-        ret['playedOrder'] = hit['order']
+        ret['nextMoveRank'] = hit['order']
     return ret
 
 def board_from_query(req):
