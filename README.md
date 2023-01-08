@@ -45,12 +45,12 @@ $ ls /foo/*.sgf \
   > result.jsonl
 ```
 
-Load the results in Python (Pandas):
+### Load the results in Python (Pandas):
 
 ```python
 import pandas as pd
-df = pd.read_json("./result.jsonl", lines=True)
-print(df[["sgfFile", "turnNumber", "winrate"]])
+df = pd.read_json('./result.jsonl', lines=True)
+print(df[['sgfFile', 'turnNumber', 'winrate']])
 
 #             sgfFile  turnNumber   winrate
 # 0      /foo/bar.sgf           0  0.461471
@@ -59,7 +59,24 @@ print(df[["sgfFile", "turnNumber", "winrate"]])
 # ...             ...         ...       ...
 ```
 
-Convert to CSV (with [jq](https://stedolan.github.io/jq/)):
+Find the worst 5 blunders excluding those that have nothing to do with winning or losing.
+
+```python
+blunders = df.query('nextWinrateGain < -0.1') \
+    .sort_values('nextScoreGain') \
+    .head(5)[['sgfFile', 'turnNumber', 'nextScoreGain']]
+print(blunders)
+
+#          sgfFile  turnNumber  nextScoreGain
+# 34  /foo/baz.sgf          34     -34.360468
+# 76  /foo/qux.sgf          24     -33.851709
+# 31  /foo/bar.sgf          31     -30.830034
+# ...
+```
+
+See sample/ directory for more snippets in Jupyter notebook, e.g. finding the top 5 exciting games in your collection, calculating the match rates with KataGo's top 3 suggestions in first 50 moves.
+
+### Convert to CSV (with [jq](https://stedolan.github.io/jq/)):
 
 ```sh
 $ cat result.jsonl \
@@ -68,26 +85,6 @@ $ cat result.jsonl \
 "/foo/bar.sgf",1,51
 "/foo/bar.sgf",2,52
 ...
-```
-
-Find the top 5 exciting games in your collection:
-
-```sh
-$ cat result.jsonl \
-  | jq -s 'map(select(0.3 < .winrate and .winrate < 0.7))
-    | group_by(.sgfFile) | map(max_by(.unsettledness)) | sort_by(- .unsettledness)
-    | limit(5; .[])
-    | {sgfFile, turnNumber, winrate, scoreLead, unsettledness}'
-```
-
-Calculate the match rates with KataGo's top 3 suggestions in first 50 moves:
-
-```sh
-$ cat result.jsonl \
-  | jq -sc 'map(select(0 <= .turnNumber and .turnNumber < 50 and .nextMoveColor != null))
-    | group_by(.sgfFile)[] | group_by(.nextMoveColor)[]
-    | [(.[0] | .sgfFile, .PB, .PW, .nextMoveColor),
-       (map(.nextMoveRank) | (map(select(. < 3 and . != null))|length) / length)]'
 ```
 
 ## <a name="download"></a>Download
@@ -159,7 +156,7 @@ The fields in responses are extended depending on the value of the option `-extr
 Even more fields are added redundantly for '-extra excess'. This is the default.
 
 * `nextRootInfo`: Copy of the rootInfo of the next turn if it exists.
-* All fields in `rootInfo` and `query` are also copied directly under the response. This enables easy access in jq as `{turnNumber, winrate}` instead of `{turnNumber, winrate: .rootInfo.winrate}`.
+* All fields in `rootInfo` and `query` are also copied directly under the response. This enables easy access in Pandas and jq (`{turnNumber, winrate}` instead of `{turnNumber, winrate: .rootInfo.winrate}`).
 * If exists, all fields in `sgfProp` are copied similarly. List elements are joined to one string for convenience, e.g., `"PB": "Shusaku", "BR": "4d", "PW": "Inseki", "WR": "8d", "RE": "B+2"`.
 
 `moveInfos` is guaranteed to be sorted by `order`.
