@@ -27,20 +27,20 @@ Let's leave the interaction with KataGo to katawrap and concentrate on analyzing
 As with original KataGo, katawrap receives JSONL ([JSON Lines](https://jsonlines.org/)) queries from STDIN and reports JSONL responses to STDOUT basically. It also accepts a simplified query like
 
 ```json
-{"sgfFile": "/foo/bar.sgf", "visits": 400, "every": 10}
+{"sgfFile": "/foo/bar.sgf", "visits": 400}
 ```
 
 instead of the original query:
 
 ```json
-{"id": "1", "maxVisits": 400, "analyzeTurns": [0, 10, 20, ...], "moves": [["B", "D16"], ["W", "C17"], ...], "rules": "tromp-taylor", "komi": 7.5, "boardXSize": 19, "boardYSize": 19}
+{"id": "1", "maxVisits": 400, "analyzeTurns": [0, 1, 2, ...], "moves": [["B", "D16"], ["W", "C17"], ...], "rules": "tromp-taylor", "komi": 7.5, "boardXSize": 19, "boardYSize": 19}
 ```
 
 As a further extension, katawrap supports list of SGF files for its input. You can analyze all your SGF files in this way:
 
 ```sh
 $ ls /foo/*.sgf \
-  | ./katawrap.py -visits 400 -every 10 \
+  | ./katawrap.py -visits 400 \
       ./katago analysis -config analysis.cfg -model model.bin.gz \
   > result.jsonl
 ```
@@ -48,38 +48,32 @@ $ ls /foo/*.sgf \
 Load the results in Python (Pandas):
 
 ```python
-# sample.py
 import pandas as pd
 df = pd.read_json("./result.jsonl", lines=True)
 print(df[["sgfFile", "turnNumber", "winrate"]])
+
+#             sgfFile  turnNumber   winrate
+# 0      /foo/bar.sgf           0  0.461471
+# 1      /foo/bar.sgf           1  0.507684
+# 2      /foo/bar.sgf           2  0.516876
+# ...             ...         ...       ...
 ```
 
-```sh
-$ python sample.py
-            sgfFile  turnNumber   winrate
-0      /foo/bar.sgf           0  0.461471
-1      /foo/bar.sgf          10  0.507684
-2      /foo/bar.sgf          20  0.516876
-...             ...         ...       ...
-```
-
-Select fields and convert them to CSV (with [jq](https://stedolan.github.io/jq/)):
+Convert to CSV (with [jq](https://stedolan.github.io/jq/)):
 
 ```sh
 $ cat result.jsonl \
   | jq -r '[.sgfFile, .turnNumber, (.winrate*100|round)] | @csv'
 "/foo/bar.sgf",0,46
-"/foo/bar.sgf",10,51
-"/foo/bar.sgf",20,52
+"/foo/bar.sgf",1,51
+"/foo/bar.sgf",2,52
 ...
 ```
 
 Find the top 5 exciting games in your collection:
 
 ```sh
-$ ls /foo/*.sgf \
-  | ./katawrap.py -visits 1 -every 20 \
-      ./katago analysis -config analysis.cfg -model model.bin.gz \
+$ cat result.jsonl \
   | jq -s 'map(select(0.3 < .winrate and .winrate < 0.7))
     | group_by(.sgfFile) | map(max_by(.unsettledness)) | sort_by(- .unsettledness)
     | limit(5; .[])
@@ -89,9 +83,7 @@ $ ls /foo/*.sgf \
 Calculate the match rates with KataGo's top 3 suggestions in first 50 moves:
 
 ```sh
-$ ls /foo/*.sgf \
-  | ./katawrap.py -visits 100 \
-      ./katago analysis -config analysis.cfg -model model.bin.gz \
+$ cat result.jsonl \
   | jq -sc 'map(select(0 <= .turnNumber and .turnNumber < 50 and .playedColor != null))
     | group_by(.sgfFile)[] | group_by(.playedColor)[]
     | [(.[0] | .sgfFile, .PB, .PW, .playedColor),
@@ -236,7 +228,7 @@ $ cat /tmp/f \
 
 ```sh
 $ ls /foo/*.sgf \
-  | ./katawrap.py -visits 1 -every 100 \
+  | ./katawrap.py -visits 400 \
       -netcat nc localhost 1234 \
   > result.jsonl
 ```
