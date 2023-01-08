@@ -407,15 +407,17 @@ def is_ignorable_response(response, sorter):
 
 progress_total = None
 progress_current = 0
+progress_start_time = None
 
 def print_progress(sorter):
     if args['silent']:
         return
+    ti = elapsed_time_string()
     q = progress_of_queries()
     w, p, j, d = sorter.count()
     # message = f"[q] {q} [res] wait={w} pool={p} join={j} done={d} ... "
     s = '0' if progress_current == progress_total else '?'
-    message = f"[query {q}] [response {s} > {w} > {p} > {j} > {d}] ... "
+    message = f"[q {q}] [res {s} > {w} > {p} > {j} > {d}] {ti} ... "
     warn(message, overwrite=True)
 
 def progress_of_queries():
@@ -425,6 +427,19 @@ def progress_of_queries():
 def finish_print_progress(interrupted):
     if not args['silent']:
         warn('\nInterrupted.' if interrupted else 'All done.')
+
+def elapsed_time_string():
+    global progress_start_time
+    if progress_start_time is None:
+        progress_start_time = time.time()
+    seconds = int(time.time() - progress_start_time)
+    minutes, s = quotient_and_remainder(seconds, 60)
+    h, m = quotient_and_remainder(minutes, 60)
+    h_str = '' if h < 1 else f"{h}:"
+    return f"{h_str}{m:02}:{s:02}"
+
+def quotient_and_remainder(a, b):
+    return int(a / b), a % b
 
 ##############################################
 # SGF
