@@ -94,7 +94,7 @@ $ ls /foo/*.sgf \
       ./katago analysis -config analysis.cfg -model model.bin.gz \
   | jq -sc 'map(select(0 <= .turnNumber and .turnNumber < 50 and .playedColor != null))
     | group_by(.sgfFile)[] | group_by(.playedColor)[]
-    | [(.[0] | .sgfFile, (.sgfProp|.PB[0]+"(B)", .PW[0]+"(W)"), .playedColor),
+    | [(.[0] | .sgfFile, .PB, .PW, .playedColor),
        (map(.playedOrder) | (map(select(. < 3 and . != null))|length) / length)]'
 ```
 
@@ -165,6 +165,7 @@ Even more fields are added redundantly for '-extra excess'. This is the default.
 
 * `nextRootInfo`: Copy of the rootInfo of the next turn if it exists.
 * All fields in `rootInfo` and `query` are also copied directly under the response. This enables easy access in jq as `{turnNumber, winrate}` instead of `{turnNumber, winrate: .rootInfo.winrate}`.
+* If exists, all fields in `sgfProp` are copied similarly. List elements are joined to one string for convenience, e.g., `"PB": "Shusaku", "BR": "4d", "PW": "Inseki", "WR": "8d", "RE": "B+2"`.
 
 `moveInfos` is guaranteed to be sorted by `order`.
 

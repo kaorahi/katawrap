@@ -302,12 +302,25 @@ def add_extra_response(req, res):
     extra = args['extra']
     if extra == 'normal':
         return
+    rich = rich_response(req, res)
+    excess = excessive_response(req, res) if extra == 'excess' else {}
+    res |= excess | rich | res
+
+def rich_response(req, res):
     rich = played_move_etc(req, res) | {
         'query': req,
         'board': board_from_query(req),
     }
-    excess = (req | res['rootInfo']) if extra == 'excess' else {}
-    res |= excess | rich | res
+    return rich
+
+def excessive_response(req, res):
+    return req | cooked_sgf_prop(req) | res['rootInfo']
+
+def cooked_sgf_prop(req):
+    sgf_prop = req.get('sgfProp')
+    if not sgf_prop:
+        return {}
+    return {k: ','.join(v) for k, v in sgf_prop.items()}
 
 def played_move_etc(req, res):
     moves = req['moves']
