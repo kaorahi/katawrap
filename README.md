@@ -233,13 +233,11 @@ $ ls /foo/*.sgf \
   > result.jsonl
 ```
 
-Note that KataGo keeps running even if you terminate the client with CTRL-C. You also need to terminate the server if you want to stop remaining search immediately for KataGo 1.11.0.
-
-This problem will be resolved with newer KataGo by the option `-netcat` as above. All requests are canceled by CTRL-C in this case and KataGo server can respond to new queries from another client soon. It will be supported from the next release of KataGo after Jan 7 2023. [ref](https://github.com/lightvector/KataGo/issues/726)
+Note that KataGo keeps running even if you terminate the client with CTRL-C. The above option `-netcat` is necessary to cancel requests soon in such cases. This is supported from KataGo 1.12.0. For KataGo 1.11.0, you need to terminate the server if you want to stop remaining search immediately.
 
 ## <a name="misc"></a>Misc.
 
-* tested with KataGo [1.11.0](https://github.com/lightvector/KataGo/releases/tag/v1.11.0).
+* tested with KataGo [1.12.0](https://github.com/lightvector/KataGo/releases/tag/v1.12.0).
 * SGF parser is copied from KaTrain [v1.12](https://github.com/sanderland/katrain/releases/tag/v1.12).
 * MIT License
 * [Project home](https://github.com/kaorahi/katawrap)
