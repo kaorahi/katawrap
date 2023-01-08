@@ -516,11 +516,9 @@ def terminate_all_queries(process):
 ##############################################
 # main loop
 
-thread_condition = threading.Condition()
-
 is_input_finished = False
 
-def read_queries(katago_process, sorter):
+def read_queries(katago_process, sorter, thread_condition):
     global is_input_finished, progress_total, progress_current
     if args['sequentially']:
         input_lines = sys.stdin
@@ -529,10 +527,10 @@ def read_queries(katago_process, sorter):
         progress_total = len(input_lines)
     for k, line in enumerate(input_lines):
         progress_current = k + 1
-        cook_input_line(line, katago_process, sorter)
+        cook_input_line(line, katago_process, sorter, thread_condition)
     is_input_finished = True
 
-def cook_input_line(raw_line, katago_process, sorter):
+def cook_input_line(raw_line, katago_process, sorter, thread_condition):
     line = raw_line.strip()
     debug_print(f"(from STDIN): {line}")
     with thread_condition:
@@ -541,13 +539,13 @@ def cook_input_line(raw_line, katago_process, sorter):
     for j in js:
         send_to_katago(j, katago_process)
 
-def read_responses(katago_process, sorter):
+def read_responses(katago_process, sorter, thread_condition):
     try:
-        do_read_responses(katago_process, sorter)
+        do_read_responses(katago_process, sorter, thread_condition)
     except BrokenPipeError:
         warn('BrokenPipe in response thread')
 
-def do_read_responses(katago_process, sorter):
+def do_read_responses(katago_process, sorter, thread_condition):
     while in_progress(katago_process, sorter):
         line = katago_process.stdout.readline().decode().strip()
         if not line:
@@ -570,9 +568,9 @@ def in_progress(katago_process, sorter):
 
 def main():
     interrupted = False
-    katago_process, response_thread, sorter = initialize()
+    katago_process, response_thread, sorter, thread_condition = initialize()
     try:
-        read_queries(katago_process, sorter)
+        read_queries(katago_process, sorter, thread_condition)
         response_thread.join()
     except KeyboardInterrupt:
         interrupted = True
@@ -582,16 +580,17 @@ def main():
 def initialize():
     katago_process = start_katago()
     sorter = make_sorter()
+    thread_condition = threading.Condition()
     response_thread = threading.Thread(
         target=read_responses,
-        args=(katago_process, sorter),
+        args=(katago_process, sorter, thread_condition),
         daemon=True,
     )
     response_thread.start()
     if args['netcat']:
         # cancel requests by previous client for safety
         terminate_all_queries(katago_process)
-    return (katago_process, response_thread, sorter)
+    return (katago_process, response_thread, sorter, thread_condition)
 
 def finalize(katago_process, interrupted):
     try:
@@ -613,4 +612,5 @@ def finalize_interruption():
     another_netcat.stdin.close()
     warn('...Sent')
 
-main()
+if __name__ == "__main__":
+    main()
