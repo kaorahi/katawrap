@@ -96,6 +96,8 @@ $ cat result.jsonl \
 
 Just download a ZIP file from [github](https://github.com/kaorahi/katawrap) (green "Code" button at the top), unzip it, and use it. No installation or external libraries are required, but [KataGo](https://github.com/lightvector/KataGo/) itself must be set up in advance. See the above examples for usage. (Change file names and paths as appropriate for your case.)
 
+Alternatively, you can also upload another [Jupyter notebook](https://github.com/kaorahi/katawrap/blob/main/sample/google_colab/katawrap_sample_colab.ipynb) to Google Colaboratory and run KataGo + katawrap there. (Do not forget to change runtime type to GPU.)
+
 ## Features
 
 ### <a name="overview"></a>Overview

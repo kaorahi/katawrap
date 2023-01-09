@@ -1,6 +1,10 @@
 # Sample of analysis with katawrap
 
+# Jupyter notebooks
+
 You may like to skip this document and open katawrap_sample.ipynb directly for a quick look at what it looks like. You can try it with prepared analysis results immediately.
+
+Or, you can also upload google_colab/katawrap_colab_sample.ipynb to Google Colaboratory and run KataGo + katawrap there. (Do not forget to change runtime type to GPU.)
 
 ## About this directory
 
