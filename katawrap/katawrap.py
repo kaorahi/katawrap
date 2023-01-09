@@ -22,7 +22,7 @@ import uuid
 
 from sorter import Sorter
 from board import board_from_moves
-from util import find_if, warn, parse_json
+from util import find_if, warn, parse_json, merge_dict
 
 from katrain.sgf_parser import SGF
 
@@ -58,7 +58,7 @@ if __name__ == "__main__":
 
     args = vars(parser.parse_args())
     default_default = {} if args['extra'] == 'normal' else {'includeUnsettledness': True}
-    default = default_default | parse_json(args['default'] or '{}')
+    default = merge_dict(default_default, parse_json(args['default'] or '{}'))
     override = parse_json(args['override'] or '{}')
     for key in ['komi', 'rules', 'visits', 'from', 'to', 'every', 'last']:
         val = args[key]
@@ -102,7 +102,7 @@ def cook_response(response, sorter):
 # cook query
 
 def cooked_queries_and_requests(orig_query, needs_extra, error_reporter):
-    query = default | orig_query | override
+    query = merge_dict(default, orig_query, override)
     override_sgf = ['rules', 'komi']
     override_after_sgf = {k: override[k] for k in override_sgf if k in override.keys()}
     katago_query, extra = cooked_query_for_katago(query, override_after_sgf)
@@ -111,7 +111,7 @@ def cooked_queries_and_requests(orig_query, needs_extra, error_reporter):
         error_reporter(f"{err} in {katago_query} (from {query})")
         return ([], [])
     additional = extra if needs_extra else {}
-    requests = expand_query_turns(query | katago_query | additional)
+    requests = expand_query_turns(merge_dict(query, katago_query, additional))
     return ([katago_query], requests)
 
 def cooked_query_for_katago(given_query, override_after_sgf):
@@ -119,7 +119,7 @@ def cooked_query_for_katago(given_query, override_after_sgf):
     add_id(query)
     cook_sgf_file(query)
     extra = cook_sgf(query)
-    query |= override_after_sgf
+    query.update(override_after_sgf)
     if not(has_valid_moves_field(query)):
         return (query, extra)
     cook_alias(query)
@@ -180,7 +180,7 @@ def cook_sgf(query):
     except:
         query['skipMe'] = f"Failed to parse SGF text: {sgf}\n"
         return {}
-    query |= parsed
+    query.update(parsed)
     return extra
 
 def cook_analyze_turns_every(query):
@@ -285,7 +285,7 @@ def fill_placeholder(line):
     return json.dumps({key: line})
 
 def expand_query_turns(query):
-    return [query | {'turnNumber': t} for t in query['analyzeTurns']]
+    return [merge_dict(query, {'turnNumber': t}) for t in query['analyzeTurns']]
 
 ##############################################
 # cook response
@@ -304,17 +304,17 @@ def add_extra_response(req, res):
         return
     rich = rich_response(req, res)
     excess = excessive_response(req, res) if extra == 'excess' else {}
-    res |= excess | rich | res
+    res.update(merge_dict(excess, rich, res))
 
 def rich_response(req, res):
-    rich = next_move_etc(req, res) | {
+    rich = merge_dict(next_move_etc(req, res), {
         'query': req,
         'board': board_from_query(req),
-    }
+    })
     return rich
 
 def excessive_response(req, res):
-    return req | cooked_sgf_prop(req) | res['rootInfo']
+    return merge_dict(req, cooked_sgf_prop(req), res['rootInfo'])
 
 def cooked_sgf_prop(req):
     sgf_prop = req.get('sgfProp')

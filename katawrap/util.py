@@ -19,3 +19,10 @@ def parse_json(s):
     except:
         warn(f"Invalid JSON '{s}' is replaced with '{{}}')")
         return {}
+
+# for python < 3.9
+def merge_dict(*args):
+    ret = {}
+    for d in args:
+        ret.update(d)
+    return ret
