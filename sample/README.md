@@ -1,13 +1,13 @@
 # Sample of analysis with katawrap
 
-You may like to skip this document and open sample.ipynb directly for a quick look at what it looks like. You can try it with prepared analysis results immediately.
+You may like to skip this document and open katawrap_sample.ipynb directly for a quick look at what it looks like. You can try it with prepared analysis results immediately.
 
 ## About this directory
 
 * README.md: instructions (this file)
 * sgf/: sample SGF files
 * sample_result.jsonl: results of analysis by KataGo with katawrap
-* sample.ipynb: usege of analysis results with Python (Jupyter notebook)
+* katawrap_sample.ipynb: usege of analysis results with Python (Jupyter notebook)
 
 ## Note
 
@@ -42,7 +42,7 @@ $ ls sgf/*.sgf \
 ## Run Jupyter notebook
 
 ```sh
-$ jupyter notebook sample.ipynb
+$ jupyter notebook katawrap_sample.ipynb
 ```
 
 Rewrite `'sample_result.jsonl'` with `'result.jsonl'` at the beginning of the notebook. Then run all!
