@@ -8,6 +8,7 @@ You may like to skip this document and open katawrap_sample.ipynb directly for a
 * sgf/: sample SGF files
 * sample_result.jsonl: results of analysis by KataGo with katawrap
 * katawrap_sample.ipynb: usege of analysis results with Python (Jupyter notebook)
+* google_colab/: sample for katawrap on Google Colaboratory
 
 ## Note
 
