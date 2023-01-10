@@ -12,7 +12,7 @@ Let's leave the interaction with KataGo to katawrap and concentrate on analyzing
 
 * Introduction
   * [Examples](#examples)
-  * [Download](#download)
+  * [Download & Usage](#download)
 * Features
   * [Overview](#overview)
   * [Extension of queries](#queries)
@@ -92,9 +92,11 @@ $ cat result.jsonl \
 ...
 ```
 
-### <a name="download"></a>Download
+### <a name="download"></a>Download & Usage
 
-Just download a ZIP file from [github](https://github.com/kaorahi/katawrap) (green "Code" button at the top), unzip it, and use it. No installation or external libraries are required, but [KataGo](https://github.com/lightvector/KataGo/) itself must be set up in advance. See the above examples for usage. (Change file names and paths as appropriate for your case.)
+Just download a ZIP file from [github](https://github.com/kaorahi/katawrap) (green "Code" button at the top), unzip it, and use it. No installation or external libraries are required, but [KataGo](https://github.com/lightvector/KataGo/) itself must be set up in advance.
+
+See the above examples and samples/ directory for usage. (Change file names and paths as appropriate for your case.)
 
 Alternatively, you can also upload another [Jupyter notebook](https://github.com/kaorahi/katawrap/blob/main/sample/google_colab/katawrap_sample_colab.ipynb) to Google Colaboratory and run KataGo + katawrap there. (Do not forget to change runtime type to GPU.)
 
@@ -216,6 +218,7 @@ katawrap.py -order arrival -extra normal -only-last -disable-sgf-file -silent
 * Handicap stones (AB[], AW[]) are regarded as normal moves in SGF. Related to that, specification of the initial player (PL[]) is ignored in SGF.
 * `reportDuringSearchEvery` and `action` are not supported in queries.
 * Error handling is almost missing.
+* Newline characters must not appear in file names.
 * The fields and the options may be changed in future. (Check "incompatible change!" messages in git log.)
 
 Never consider to open "public katawrap server" as it accesses local files and may show their contents in error messages if `sgfFile` is given in the query. Though there is the option `-disable-sgf-file`, it is not tested sufficiently yet.
