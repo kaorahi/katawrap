@@ -42,7 +42,7 @@ _EOU_
 
 KATAGO_URL=https://github.com/lightvector/KataGo/releases/download/v1.12.0/katago-v1.12.0-cuda11.1-linux-x64.zip
 KATAGO_MODEL_URL=https://github.com/lightvector/KataGo/releases/download/v1.12.1/b18c384nbt-uec.bin.gz
-KATAWRAP_URL=https://github.com/kaorahi/katawrap/archive/0ff2cf6d6bb80e6067413e64d18e4a5f58952701.zip
+KATAWRAP_URL=https://github.com/kaorahi/katawrap/archive/refs/heads/_colab1.zip
 
 #############################################
 # check Google Colab
