@@ -48,7 +48,7 @@ $ ls /foo/*.sgf \
   > result.jsonl
 ```
 
-#### Load the results in Python (Pandas):
+#### Load the results in Python (pandas):
 
 ```python
 import pandas as pd
@@ -167,7 +167,7 @@ The fields in responses are extended depending on the value of the option `-extr
 Even more fields are added redundantly for '-extra excess'. This is the default.
 
 * `nextRootInfo`: Copy of the rootInfo of the next turn if it exists.
-* All fields in `rootInfo` and `query` are also copied directly under the response. This enables easy access in Pandas and jq (`{turnNumber, winrate}` instead of `{turnNumber, winrate: .rootInfo.winrate}`).
+* All fields in `rootInfo` and `query` are also copied directly under the response. This enables easy access in pandas and jq (`{turnNumber, winrate}` instead of `{turnNumber, winrate: .rootInfo.winrate}`).
 * If exists, all fields in `sgfProp` are copied similarly. List elements are joined to one string for convenience, e.g., `"PB": "Shusaku", "BR": "4d", "PW": "Inseki", "WR": "8d", "RE": "B+2"`.
 
 `moveInfos` is guaranteed to be sorted by `order`.
