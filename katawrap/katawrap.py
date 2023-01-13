@@ -74,9 +74,7 @@ if __name__ == "__main__":
 # cook
 
 def cook_json_to_jsonlist(func, line, sorter):
-    ret = [json.dumps(z) for z in func(parse_json(line), sorter)]
-    print_progress(sorter)
-    return ret
+    return [json.dumps(z) for z in func(parse_json(line), sorter)]
 
 def cook_query_json(line, sorter):
     return cook_json_to_jsonlist(cook_query, fill_placeholder(line), sorter)
@@ -543,6 +541,8 @@ def terminate_all_queries(process):
 ##############################################
 # main loop
 
+# query: STDIN ==> [main thread] ==> KataGo
+
 is_input_finished = False
 
 def read_queries(katago_process, sorter, thread_condition):
@@ -566,6 +566,8 @@ def cook_input_line(raw_line, katago_process, sorter, thread_condition):
     for j in js:
         send_to_katago(j, katago_process)
 
+# response: KataGo ==> [response thread] ==> STDOUT
+
 def read_responses(katago_process, sorter, thread_condition):
     try:
         do_read_responses(katago_process, sorter, thread_condition)
@@ -585,6 +587,13 @@ def do_read_responses(katago_process, sorter, thread_condition):
             print(j)
         sys.stdout.flush()
 
+# progress: [progress thread] ==> STDERR
+
+def show_progress_periodically(sec, katago_process, sorter):
+    while in_progress(katago_process, sorter):
+       print_progress(sorter)
+       time.sleep(sec)
+
 def in_progress(katago_process, sorter):
     alive =  katago_process.poll() is None
     done = is_input_finished and not sorter.has_requests()
@@ -602,6 +611,7 @@ def main():
     except KeyboardInterrupt:
         interrupted = True
     finally:
+        print_progress(sorter)
         finalize(katago_process, interrupted)
 
 def initialize():
@@ -614,10 +624,21 @@ def initialize():
         daemon=True,
     )
     response_thread.start()
+    if not args['silent']:
+        progress_sec = 1
+        start_progress_thread(progress_sec, katago_process, sorter)
     if args['netcat']:
         # cancel requests by previous client for safety
         terminate_all_queries(katago_process)
     return (katago_process, response_thread, sorter, thread_condition)
+
+def start_progress_thread(sec, katago_process, sorter):
+    progress_thread = threading.Thread(
+        target=show_progress_periodically,
+        args=(sec, katago_process, sorter),
+        daemon=True,
+    )
+    progress_thread.start()
 
 def finalize(katago_process, interrupted):
     try:
