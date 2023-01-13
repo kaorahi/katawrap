@@ -426,14 +426,22 @@ def print_progress(sorter):
     q = progress_of_queries()
     w, p, j, d, requests = sorter.count()
     # message = f"[q] {q} [res] wait={w} pool={p} join={j} done={d} ... "
-    all_requests_were_sent = processed_queries == total_queries and requests > 0
-    s = round((requests - w) / requests * 100) if all_requests_were_sent else '??'
-    message = f"[q {q}] [res {s}% {w}>{p}>{j}>{d}] {ti} ... "
+    r = progress_of_responses(w, requests)
+    message = f"[q {q}] [res {r} {w}>{p}>{j}>{d}] {ti} ... "
     warn(message, overwrite=True)
 
 def progress_of_queries():
     total = '' if total_queries is None else f"/{total_queries}"
     return f"{processed_queries}{total}"
+
+def progress_of_responses(waiting, requests):
+    if requests == 0 or processed_queries == 0:
+        return '0%'
+    responses = requests - waiting
+    p = processed_queries / total_queries
+    is_guess = p < 1
+    s = round(responses / requests * p * 100)
+    return f"{s}%{'?' if is_guess else ''}"
 
 def finish_print_progress(interrupted):
     if not args['silent']:
@@ -554,8 +562,8 @@ def read_queries(katago_process, sorter, thread_condition):
         input_lines = sys.stdin.readlines()
         total_queries = len(input_lines)
     for k, line in enumerate(input_lines):
-        processed_queries = k + 1
         cook_input_line(line, katago_process, sorter, thread_condition)
+        processed_queries = k + 1
     is_input_finished = True
 
 def cook_input_line(raw_line, katago_process, sorter, thread_condition):
