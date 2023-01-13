@@ -251,7 +251,7 @@ Note that KataGo keeps running even if you terminate the client with CTRL-C. The
 
 ### <a name="misc"></a>Misc.
 
-* tested with KataGo [1.12.0](https://github.com/lightvector/KataGo/releases/tag/v1.12.0).
+* tested with KataGo [1.12.2](https://github.com/lightvector/KataGo/releases/tag/v1.12.2).
 * SGF parser is copied from KaTrain [v1.12](https://github.com/sanderland/katrain/releases/tag/v1.12).
 * MIT License
 * [Project home](https://github.com/kaorahi/katawrap)
