@@ -415,8 +415,8 @@ def is_ignorable_response(response, sorter):
 ##############################################
 # progress message
 
-progress_total = None
-progress_current = 0
+total_queries = None
+processed_queries = 0
 progress_start_time = None
 
 def print_progress(sorter):
@@ -426,14 +426,14 @@ def print_progress(sorter):
     q = progress_of_queries()
     w, p, j, d, requests = sorter.count()
     # message = f"[q] {q} [res] wait={w} pool={p} join={j} done={d} ... "
-    all_requests_were_sent = progress_current == progress_total and requests > 0
+    all_requests_were_sent = processed_queries == total_queries and requests > 0
     s = round((requests - w) / requests * 100) if all_requests_were_sent else '??'
     message = f"[q {q}] [res {s}% {w}>{p}>{j}>{d}] {ti} ... "
     warn(message, overwrite=True)
 
 def progress_of_queries():
-    total = '' if progress_total is None else f"/{progress_total}"
-    return f"{progress_current}{total}"
+    total = '' if total_queries is None else f"/{total_queries}"
+    return f"{processed_queries}{total}"
 
 def finish_print_progress(interrupted):
     if not args['silent']:
@@ -547,14 +547,14 @@ def terminate_all_queries(process):
 is_input_finished = False
 
 def read_queries(katago_process, sorter, thread_condition):
-    global is_input_finished, progress_total, progress_current
+    global is_input_finished, total_queries, processed_queries
     if args['sequentially']:
         input_lines = sys.stdin
     else:
         input_lines = sys.stdin.readlines()
-        progress_total = len(input_lines)
+        total_queries = len(input_lines)
     for k, line in enumerate(input_lines):
-        progress_current = k + 1
+        processed_queries = k + 1
         cook_input_line(line, katago_process, sorter, thread_condition)
     is_input_finished = True
 
