@@ -35,7 +35,9 @@ class Sorter:
         pooled = len(self._res_pool)
         waiting = requests - pooled
         to_join, popped = self._joiner.count()
-        return (waiting, pooled, to_join, popped)
+        counts = [waiting, pooled, to_join, popped]
+        pushed = sum(counts)
+        return (waiting, pooled, to_join, popped, pushed)
 
     def push_requests(self, requests):
         self._req_pool += requests

@@ -424,10 +424,11 @@ def print_progress(sorter):
         return
     ti = elapsed_time_string()
     q = progress_of_queries()
-    w, p, j, d = sorter.count()
+    w, p, j, d, requests = sorter.count()
     # message = f"[q] {q} [res] wait={w} pool={p} join={j} done={d} ... "
-    s = '0' if progress_current == progress_total else '?'
-    message = f"[q {q}] [res {s} > {w} > {p} > {j} > {d}] {ti} ... "
+    all_requests_were_sent = progress_current == progress_total and requests > 0
+    s = round((requests - w) / requests * 100) if all_requests_were_sent else '??'
+    message = f"[q {q}] [res {s}% {w}>{p}>{j}>{d}] {ti} ... "
     warn(message, overwrite=True)
 
 def progress_of_queries():
