@@ -428,7 +428,7 @@ def print_progress(sorter):
     w, p, j, d, requests = sorter.count()
     # message = f"[q] {q} [res] wait={w} pool={p} join={j} done={d} ... "
     r = progress_of_responses(w, requests)
-    message = f"[q {q}] [res {r} {w}>{p}>{j}>{d}] {ti} ... "
+    message = f"[in {q}] [out {r} {w}>{p}>{j}>{d}] {ti} ... "
     warn(message, overwrite=True)
 
 def progress_of_queries():
