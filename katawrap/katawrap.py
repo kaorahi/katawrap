@@ -14,6 +14,7 @@
 import argparse
 import gzip
 import json
+import math
 import subprocess
 import sys
 import threading
@@ -440,7 +441,7 @@ def progress_of_responses(waiting, requests):
     responses = requests - waiting
     p = processed_queries / total_queries
     is_guess = p < 1
-    s = round(responses / requests * p * 100)
+    s = math.floor(responses / requests * p * 100)
     return f"{s}%{'?' if is_guess else ''}"
 
 def finish_print_progress(interrupted):
