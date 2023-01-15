@@ -187,7 +187,7 @@ If the option `-order join` is given, katawrap reports a joined response for eac
   * `rich`: Add extra fields to responses.
   * `excess`: In addition to `rich`, copy the contents of some fields directly under the response. See the previous section for details.
 * -max-requests MAX_REQUESTS: Suspend sending queries when pending requests exceeds this number. (default = 1000)
-* -sequentially: Do not read all input lines at once. This may be needed for very large inputs.
+* -sequentially: Do not read all input lines at once. This may be needed for very large inputs. In exchange, the progress message becomes somewhat unfriendly.
 * -only-last: Analyze only the last turn when analyzeTurns is missing.
 * -disable-sgf-file: Do not support sgfFile in query.
 * -netcat: Use this option when netcat (nc) is used as katago command. See [Tips](#tips).
@@ -209,7 +209,7 @@ Set `-from 50 -every 10 -last` to analyze the turns 50, 60, 70, ... and the endg
 Original KataGo is emulated to some extent by the following options.
 
 ```sh
-katawrap.py -order arrival -extra normal -only-last -disable-sgf-file -silent
+katawrap.py -order arrival -extra normal -only-last -sequentially -disable-sgf-file -silent
 ```
 
 ### <a name="limitations"></a>Limitations at present
