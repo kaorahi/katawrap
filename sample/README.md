@@ -9,11 +9,11 @@ Or, you can also upload google_colab/katawrap_colab_sample.ipynb to Google Colab
 ## About this directory
 
 * README.md: instructions (this file)
+* [katawrap_sample.ipynb](katawrap_sample.ipynb): usege of analysis results with Python (Jupyter notebook)
+* [fighter.md](fighter.md): another sample to find fighter-type players
+* [google_colab/](google_colab/): sample for katawrap on Google Colaboratory
 * sgf/: sample SGF files
 * sample_result.jsonl: results of analysis by KataGo with katawrap
-* katawrap_sample.ipynb: usege of analysis results with Python (Jupyter notebook)
-* google_colab/: sample for katawrap on Google Colaboratory
-* fighter.md: another sample to find fighter-type players
 
 ## Note
 

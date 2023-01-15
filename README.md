@@ -79,7 +79,7 @@ print(blunders)
 # ...
 ```
 
-See sample/ directory for more snippets in a [sample Jupyter notebook](https://github.com/kaorahi/katawrap/blob/main/sample/katawrap_sample.ipynb), e.g. finding the top 5 exciting games in your collection, calculating the match rates with KataGo's top 3 suggestions in first 50 moves.
+See [sample/](sample/) directory for more snippets in a [sample Jupyter notebook](sample/katawrap_sample.ipynb), e.g. finding the top 5 exciting games in your collection, calculating the match rates with KataGo's top 3 suggestions in first 50 moves.
 
 #### Convert to CSV (with [jq](https://stedolan.github.io/jq/)):
 
@@ -98,7 +98,7 @@ Just download a ZIP file from [github](https://github.com/kaorahi/katawrap) (gre
 
 See the above examples and samples/ directory for usage. (Change file names and paths as appropriate for your case.)
 
-Alternatively, you can also upload another [Jupyter notebook](https://github.com/kaorahi/katawrap/blob/main/sample/google_colab/katawrap_sample_colab.ipynb) to Google Colaboratory and run KataGo + katawrap there. (Do not forget to change runtime type to GPU.)
+Alternatively, you can also upload another [Jupyter notebook](sample/google_colab/katawrap_sample_colab.ipynb) to Google Colaboratory and run KataGo + katawrap there. (Do not forget to change runtime type to GPU.)
 
 ## Features
 
