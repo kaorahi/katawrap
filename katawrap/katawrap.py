@@ -39,6 +39,8 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=description)
     parser.add_argument('-default', metavar='JSON', help='default for missing fields in queries', required=False)
     parser.add_argument('-override', metavar='JSON', help='override queries', required=False)
+    parser.add_argument('-default-komi', metavar='KOMI', type=float, help='equivalent to specification in -default', required=False)
+    parser.add_argument('-default-rules', metavar='RULES', help='equivalent to specification in -default', required=False)
     parser.add_argument('-komi', type=float, help='equivalent to specification in -override', required=False)
     parser.add_argument('-rules', help='equivalent to specification in -override', required=False)
     parser.add_argument('-visits', metavar='MAX_VISITS', type=int, help='equivalent to specification in -override', required=False)
@@ -65,6 +67,10 @@ if __name__ == "__main__":
         val = args[key]
         if val is not None:
             override[key] = val
+    for key in ['komi', 'rules']:
+        val = args['default_' + key]
+        if val is not None:
+            default[key] = val
     katago_command = args['katago-command']
 
     if not katago_command:

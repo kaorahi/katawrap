@@ -204,6 +204,11 @@ The following options are equivalent to `-override`, e.g., `-komi 5.5` = `-overr
 * -every ANALYZE_TURNS_EVERY
 * -last
 
+Similarly, the following options are equivalent to `-default`.
+
+* -default-komi KOMI
+* -default-rules RULES
+
 Set `-from 50 -every 10 -last` to analyze the turns 50, 60, 70, ... and the endgame after the last move, for example.
 
 Original KataGo is emulated to some extent by the following options.
