@@ -19,7 +19,7 @@ Or, you can also upload google_colab/katawrap_colab_sample.ipynb to Google Colab
 This document assumes that you can run katago on the command line as follows.
 
 ```sh
-$ katago -config analysis.cfg -model model.bin.gz
+$ katago analysis -config analysis.cfg -model model.bin.gz
 ```
 
 Change this part as appropriate for your case in the following examples.
@@ -31,7 +31,7 @@ Run katawrap to dump the results.
 ```sh
 $ ls sgf/*.sgf \
   | ../katawrap/katawrap.py -visits 400 \
-      katago -config analysis.cfg -model model.bin.gz \
+      katago analysis -config analysis.cfg -model model.bin.gz \
   > result.jsonl
 ```
 
@@ -40,7 +40,7 @@ If this is too slow, try decreasing visits and/or analyzing every N turns, for e
 ```sh
 $ ls sgf/*.sgf \
   | ../katawrap/katawrap.py -visits 100 -every 25 \
-      katago -config analysis.cfg -model model.bin.gz \
+      katago analysis -config analysis.cfg -model model.bin.gz \
   > result.jsonl
 ```
 
