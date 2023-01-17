@@ -10,7 +10,7 @@ Or, you can also upload [google_colab/katawrap_sample_colab.ipynb](google_colab/
 
 * README.md: instructions (this file)
 * [katawrap_sample.ipynb](katawrap_sample.ipynb): usege of analysis results with Python (Jupyter notebook)
-* [fighter.md](fighter.md): another sample to find fighter-type players
+* [analyze_go_styles.md](analyze_go_styles.md): another sample to analyze players' Go styles
 * [google_colab/](google_colab/): sample for katawrap on Google Colaboratory
 * sgf/: sample SGF files
 * sample_result.jsonl: results of analysis by KataGo with katawrap
