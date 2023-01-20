@@ -59,14 +59,18 @@ exit_unless_colab () {
 #############################################
 # downalod & setup
 
-setup () {
-    # fix
-    echo "@@@@@@@@@@ Fix libzip issue..."
+fix_libzip5 () {
     LIBZIP=/usr/lib/x86_64-linux-gnu/libzip.so
     LIBZIP5=/usr/lib/x86_64-linux-gnu/libzip.so.5
     sudo apt install libzip-dev
     [ -e $LIBZIP5 ] && return
     [ -e $LIBZIP ] && sudo ln -s $LIBZIP $LIBZIP5
+}
+
+setup () {
+    # fix
+    echo "@@@@@@@@@@ Fix libzip issue..."
+    fix_libzip5
     # download
     echo "@@@@@@@@@@ Download..."
     curl -L $KATAGO_URL > katago.zip
