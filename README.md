@@ -1,4 +1,4 @@
-# katawrap: batch analyzer of the game Go powered by KataGo
+# katawrap: simplify batch analysis of SGF collections with KataGo
 
 This is just a wrapper script to extend [katago analysis](https://github.com/lightvector/KataGo/blob/v1.11.0/docs/Analysis_Engine.md) for casual use on the command line:
 
