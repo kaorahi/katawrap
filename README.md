@@ -162,6 +162,7 @@ The fields in responses are extended depending on the value of the option `-extr
 * `nextWinrateGain`: Difference of `winrate` before and after `nextMove` (> 0 if superior to AI).
 * `nextScoreGain`: Difference of `scoreLead` before and after `nextMove` (> 0 if superior to AI).
 * `unsettledness`: The situation tend to be 'exciting' if this is greater than 20. It is defined as the sum of (1 - |ownership|) for all stones on the board. (It is indicated by red dots in the score chart in [LizGoban](https://github.com/kaorahi/lizgoban). [ref](https://github.com/sanderland/katrain/issues/215))
+* `blackUnsettledness`, `whiteUnsettledness`, `territoryUnsettledness`: The sum of (1 - |ownership|) on black stones, white stones, and empty grids, respectively.
 * `board`: 2D array of "X", "O", or "." for the current board.
 
 Even more fields are added redundantly for '-extra excess'. This is the default.

@@ -356,12 +356,23 @@ def cook_unsettledness(req, res):
     # that incurs some performance overhead.
     if req.get('includeUnsettledness'):
         board = res.get('board') or board_from_query(req)
-        res['unsettledness'] = calculate_unsettledness(res['ownership'], board)
+        res.update(calculate_unsettledness(res['ownership'], board))
 
 def calculate_unsettledness(ownership, board):
     flattened_board = sum(board, [])
-    unsettledness = lambda o, b: 0 if b == '.' else 1 - abs(o)
-    return sum(unsettledness(o, b) for o, b in zip(ownership, flattened_board))
+    board_marks = ('X', 'O', '.')
+    b, w, t = (unsettledness_for(c, ownership, flattened_board) for c in board_marks)
+    return {
+        'blackUnsettledness': b,
+        'whiteUnsettledness': w,
+        'territoryUnsettledness': t,
+        'unsettledness': b + w,
+    }
+
+def unsettledness_for(stone_mark, ownership, flattened_board):
+    unsettledness = lambda o: 1 - abs(o)
+    o_b_pairs = zip(ownership, flattened_board)
+    return sum(unsettledness(o) for o, b in o_b_pairs if b == stone_mark)
 
 # for joiner
 
