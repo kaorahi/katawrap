@@ -490,11 +490,14 @@ def parse_sgf(sgf):
         'moves': gtp_moves_in_main_branch(root),
         'boardXSize': x,
         'boardYSize': y,
+        'initialPlayer': root.initial_player,
     }
     extra = {
         'sgfProp': root.sgf_properties(),
         'sgf': sgf,
     }
+    if root.placements:
+        ret['initialStones'] = gtp_moves_for(root.placements)
     if root.komi is not None:
         ret['komi'] = root.komi
     if root.ruleset:
@@ -502,12 +505,15 @@ def parse_sgf(sgf):
     return (ret, extra)
 
 def gtp_moves_in_main_branch(root):
-    nodes = main_branch(root)
-    katrain_moves = sum([n.move_with_placements for n in nodes], [])
+    nodes = main_branch_after(root)
+    katrain_moves = sum([n.move_with_placements for n in nodes], root.moves)
+    return gtp_moves_for(katrain_moves)
+
+def gtp_moves_for(katrain_moves):
     return [[m.player, m.gtp()] for m in katrain_moves]
 
-def main_branch(root):
-    nodes = [root]
+def main_branch_after(root):
+    nodes = []
     cur = root
     while cur.children:
         cur = cur.children[0]

@@ -222,7 +222,7 @@ katawrap.py -order arrival -extra normal -only-last -sequentially -disable-sgf-f
 
 * Limited SGF support
   * Only the main branch is analyzed.
-  * Handicap stones (AB[], AW[]) are regarded as normal moves in SGF. Related to that, specification of the initial player (PL[]) is ignored.
+  * AB[], AW[], and PL[] are supported only in the root note.
   * Most minor properties are ignored. (AE[], etc.)
 * `reportDuringSearchEvery` and `action` are not supported in queries.
 * Error handling is almost missing.
