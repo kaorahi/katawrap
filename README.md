@@ -98,7 +98,7 @@ Just download a ZIP file from [github](https://github.com/kaorahi/katawrap) (gre
 
 See the above [examples](#examples) and [sample/](sample/) directory for usage. (Change file names and paths as appropriate for your case.)
 
-Alternatively, you can also upload another [Jupyter notebook](sample/google_colab/katawrap_sample_colab.ipynb) to Google Colaboratory and run KataGo + katawrap there. (Do not forget to change runtime type to GPU.)
+Alternatively, you can also upload another [Jupyter notebook](sample/google_colab/katawrap_sample_colab.ipynb) to [Google Colaboratory](https://colab.research.google.com/) and run KataGo + katawrap there. (Do not forget to change runtime type to GPU.)
 
 ## Features
 
@@ -220,8 +220,10 @@ katawrap.py -order arrival -extra normal -only-last -sequentially -disable-sgf-f
 
 ### <a name="limitations"></a>Limitations at present
 
-* Only the main branch is analyzed in SGF.
-* Handicap stones (AB[], AW[]) are regarded as normal moves in SGF. Related to that, specification of the initial player (PL[]) is ignored in SGF.
+* Limited SGF support
+  * Only the main branch is analyzed.
+  * Handicap stones (AB[], AW[]) are regarded as normal moves in SGF. Related to that, specification of the initial player (PL[]) is ignored.
+  * Most minor properties are ignored. (AE[], etc.)
 * `reportDuringSearchEvery` and `action` are not supported in queries.
 * Error handling is almost missing.
 * Newline characters must not appear in file names.

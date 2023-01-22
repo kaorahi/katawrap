@@ -4,7 +4,7 @@ This note introduces a fun application of [KataGo](https://github.com/lightvecto
 
 Here is an example to list the players who has high/low mean unsettledness at 120th move for Ubuntu Linux and a helper tool [katawrap](https://github.com/kaorahi/katawrap), where "unsettledness" is defined as the sum of (1 - |ownership|) over all existing stones on the board.
 
-Replace YOUR_KATAGO_... below as appropreate.
+Replace `YOUR_KATAGO_...` below as appropreate.
 
 ```
 $ sudo apt-get install python3-pandas jq
