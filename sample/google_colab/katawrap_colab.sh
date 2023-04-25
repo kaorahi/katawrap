@@ -118,7 +118,7 @@ if [ "$mode" = "setup" ]; then
     setup
 elif [ "$mode" = "run" ]; then
     exit_unless_colab
-    run
+    run "$@"
 else
     usage
     exit 0
