@@ -335,7 +335,8 @@ def rich_response(req, res):
 def excessive_response(req, res):
     root_info = res['rootInfo']
     res['rootInfo'] = extended_root_info(res)
-    return merge_dict(req, cooked_sgf_prop(req), root_info)
+    override = req.get('overrideSettings', {})
+    return merge_dict(req, cooked_sgf_prop(req), root_info, override)
 
 def extended_root_info(res):
     keys = [
