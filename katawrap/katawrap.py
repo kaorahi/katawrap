@@ -516,9 +516,11 @@ def cook_successive_pairs(former_pair, latter_pair):
     res0['nextRootInfo'] = res1['rootInfo']
     # gain
     sign = res0['nextMoveSign']
-    setter = lambda gain_key, key: gain_setter(gain_key, key, res0, res1, sign)
+    setter = lambda gain_key, key, sign=sign: gain_setter(gain_key, key, res0, res1, sign)
     setter('nextWinrateGain', 'winrate')
     setter('nextScoreGain', 'scoreLead')
+    setter('nextMoyoGain', 'moyoLead')
+    setter('nextUnsettlednessGain', 'unsettledness', +1)
 
 def gain_setter(gain_key, key, res0, res1, sign):
     if key in res0 and key in res1:
