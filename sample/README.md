@@ -14,6 +14,7 @@ Or, you can also upload [google_colab/katawrap_sample_colab.ipynb](google_colab/
 * [google_colab/](google_colab/): sample for katawrap on Google Colaboratory
 * sgf/: sample SGF files
 * sample_result.jsonl: results of analysis by KataGo with katawrap
+* estimate_rank.py: sample for dan/kyu estimation. Run `./estimate_rank.py -h` for details.
 
 ## Note
 
