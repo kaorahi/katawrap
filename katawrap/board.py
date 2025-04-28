@@ -20,8 +20,8 @@ import re
 ##############################################
 # export
 
-def board_from_moves(moves, x_size, y_size):
-    stones = stones_from_history(moves, y_size, x_size)
+def board_from_moves(moves, x_size, y_size, init_board=None):
+    stones = stones_from_history(moves, y_size, x_size, init_board)
     return aa_map(stones, letter_for_stone)
 
 def board_after_move(move, board):
@@ -41,8 +41,11 @@ def board_to_str(board):
 #     return stones
 # }
 
-def stones_from_history(history, i_size, j_size):
-    stones = aa_new(i_size, j_size, lambda: {})
+def stones_from_history(history, i_size, j_size, init_board):
+    if init_board is None:
+        stones = aa_new(i_size, j_size, lambda: {})
+    else:
+        stones = aa_map(init_board, stone_from_letter)
     for k, h in enumerate(history):
         put(h, stones, i_size, j_size)
     return stones
@@ -149,6 +152,14 @@ def xor(a, b):
 def letter_for_stone(s):
     return '.' if not s.get('stone') else 'X' if s.get('black') else 'O'
 
+def stone_from_letter(l):
+    d = {
+        '.': {},
+        'X': {'stone': True, 'black': True},
+        'O': {'stone': True, 'black': False},
+    }
+    return d[l].copy()
+
 def around_idx(ij):
     around_idx_diff = [(1, 0), (0, 1), (-1, 0), (0, -1)]
     i, j = ij
@@ -190,12 +201,13 @@ if __name__ == "__main__":
     board_size = 5
     samples = [
         [["B","A5"],["W","A4"],["B","B5"],["W","B4"],["B","C4"],["W","C5"]],
-        [["B","A5"],["W","A4"],["B","B5"],["W","B4"],["B","C4"],["W","C5"],["B","D5"],["W","D4"],["B","B5"]],
-        [["B","A5"],["W","A4"],["B","B5"],["W","B4"],["B","C4"],["W","C5"],["B","D5"],["W","D4"],["B","B5"],["W","A5"],["B","B3"],["W","C5"]],
-        [["B","A5"],["W","A4"],["B","B5"],["W","B4"],["B","C4"],["W","C5"],["B","D5"],["W","D4"],["B","B5"],["W","A5"],["B","B3"],["W","C5"],["B","A3"],["W","D3"],["B","B5"]],
+        [["B","D5"],["W","D4"],["B","B5"]],
+        [["W","A5"],["B","B3"],["W","C5"]],
+        [["B","A3"],["W","D3"],["B","B5"]],
     ]
+    b = None
     for moves in samples:
-        b = board_from_moves(moves, board_size, board_size)
+        b = board_from_moves(moves, board_size, board_size, init_board=b)
         print(board_to_str(b) + '\n')
 
 # ..O..
