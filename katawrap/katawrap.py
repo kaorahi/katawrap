@@ -342,6 +342,7 @@ def extended_root_info(res):
         'unsettledness',
         'blackMoyo',
         'whiteMoyo',
+        'moyoLead',
     ]
     root_info = res['rootInfo']
     additional = {k: res[k] for k in keys if k in res}
@@ -445,6 +446,7 @@ def calculate_moyo(ownership, board):
     return {
         'blackMoyo': b,
         'whiteMoyo': w,
+        'moyoLead': b - w,
     }
 
 def black_moyo_func(o):
