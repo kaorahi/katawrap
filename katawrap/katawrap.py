@@ -53,7 +53,7 @@ if __name__ == "__main__":
     parser.add_argument('-max-requests', type=int, help='suspend sending queries when pending requests exceeds this number (0 = unlimited)', default=1000, required=False)
     parser.add_argument('-sequentially', action='store_true', help='do not read all input lines at once')
     parser.add_argument('-only-last', action='store_true', help='analyze only the last turn when analyzeTurns is missing')
-    parser.add_argument('-sgf-encoding', metavar='ENCODING', help='use ENCODING (e.g. shift-jis) to read SGF file', default='utf-8', required=False)
+    parser.add_argument('-sgf-encoding', metavar='ENCODINGS', help='use ENCODINGS (e.g. "utf-8,latin-1") to read SGF file', default='utf-8,latin-1,cp932,euc_jp,iso2022_jp', required=False)
     parser.add_argument('-disable-sgf-file', action='store_true', help='do not support sgfFile in query')
     parser.add_argument('-suspend-to', metavar='PATH', help='use pre-post wrapping like "katawrap.py -suspend-to PATH | katago | katawrap.py -resume-from PATH"', default=None, required=False)
     parser.add_argument('-resume-from', metavar='PATH', help='use pre-post wrapping like "katawrap.py -suspend-to PATH | katago | katawrap.py -resume-from PATH"', default=None, required=False)
@@ -173,12 +173,17 @@ def cook_sgf_file(query):
         return
     opener = gzip.open if sgf_file.endswith('gz') else open
     try:
-        with opener(sgf_file, mode='rt', encoding=args['sgf_encoding']) as f:
-            sgf = f.read()
+        with opener(sgf_file, mode='rb') as f:
+            raw = f.read()
+            for encoding in args['sgf_encoding'].split(','):
+                try:
+                    query['sgf'] = raw.decode(encoding)
+                    return
+                except:
+                    pass
+            query['skipMe'] = f"Failed to read SGF file: {sgf_file}\n"
     except:
-        query['skipMe'] = f"Failed to read SGF file: {sgf_file}\n"
-        return
-    query['sgf'] = sgf
+        query['skipMe'] = f"Failed to open SGF file: {sgf_file}\n"
 
 def cook_sgf(query):
     sgf = query.pop('sgf', None)
