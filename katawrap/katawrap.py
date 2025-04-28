@@ -364,7 +364,8 @@ def cook_unsettledness(req, res):
 def calculate_unsettledness(ownership, board):
     flattened_board = sum(board, [])
     board_marks = ('X', 'O', '.')
-    b, w, t = (unsettledness_for(c, ownership, flattened_board) for c in board_marks)
+    f = unsettledness_by_entropy if args['unsettledness_by_entropy'] else unsettledness_by_abs
+    b, w, t = (ownership_based_feature(f, c, ownership, flattened_board) for c in board_marks)
     return {
         'blackUnsettledness': b,
         'whiteUnsettledness': w,
@@ -372,10 +373,9 @@ def calculate_unsettledness(ownership, board):
         'unsettledness': b + w,
     }
 
-def unsettledness_for(stone_mark, ownership, flattened_board):
-    unsettledness = unsettledness_by_entropy if args['unsettledness_by_entropy'] else unsettledness_by_abs
+def ownership_based_feature(f, stone_mark, ownership, flattened_board):
     o_b_pairs = zip(ownership, flattened_board)
-    return sum(unsettledness(o) for o, b in o_b_pairs if b == stone_mark)
+    return sum(f(o) for o, b in o_b_pairs if b == stone_mark)
 
 def unsettledness_by_abs(o):
     return 1 - abs(o)
