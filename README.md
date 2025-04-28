@@ -22,6 +22,7 @@ Let's leave the interaction with KataGo to katawrap and concentrate on analyzing
 * Appendix
   * [Tips (KataGo server)](#tips)
   * [Misc.](#misc)
+  * [Major changes](#changes)
 
 ## Introduction
 
@@ -193,6 +194,7 @@ If the option `-order join` is given, katawrap reports a joined response for eac
 * -max-requests MAX_REQUESTS: Suspend sending queries when pending requests exceeds this number. (0 for "unlimited". default = 1000)
 * -sequentially: Do not read all input lines at once. This may be needed for very large inputs. In exchange, the progress message becomes somewhat unfriendly.
 * -only-last: Analyze only the last turn when analyzeTurns is missing.
+* -sgf-encoding: Specify encodings to read SGF files, e.g., "utf-8,latin-1".
 * -disable-sgf-file: Do not support sgfFile in query.
 * -netcat: Use this option when netcat (nc) is used as katago command. See [Tips](#tips).
 * -silent: Do not print progress info to stderr.
@@ -221,6 +223,8 @@ Original KataGo is emulated to some extent by the following options.
 ```sh
 katawrap.py -order arrival -extra normal -only-last -sequentially -disable-sgf-file -silent
 ```
+
+See `katawrap.py -h` for the complete list.
 
 ### <a name="limitations"></a>Limitations at present
 
@@ -267,3 +271,9 @@ Note that KataGo keeps running even if you terminate the client with CTRL-C. The
 * SGF parser is copied from KaTrain [v1.12](https://github.com/sanderland/katrain/releases/tag/v1.12).
 * MIT License
 * [Project home](https://github.com/kaorahi/katawrap)
+
+### <a name="changes"></a>Major Changes
+
+* [2025-04-28] added options (`-sgf-encoding`, `-override-list`, `-scan-humansl-ranks`, etc.)
+* [2025-04-28] added `sample/estimate_rank.py`
+* [2025-04-28] added some undocumented features (see git log)
