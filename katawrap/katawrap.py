@@ -57,6 +57,7 @@ if __name__ == "__main__":
     parser.add_argument('-netcat', action='store_true', help='use this option when netcat (nc) is used as katago command')
     parser.add_argument('-silent', action='store_true', help='do not print progress info to stderr')
     parser.add_argument('-debug', action='store_true', help='print debug info to stderr')
+    parser.add_argument('-unsettledness-by-entropy', action='store_true', help='experimental (undocumented)')
     parser.add_argument('katago-command', metavar='KATAGO_COMMAND', help='(ex.) ./katago analysis -config analysis.cfg -model model.bin.gz', nargs=argparse.REMAINDER)
 
     args = vars(parser.parse_args())
@@ -370,9 +371,19 @@ def calculate_unsettledness(ownership, board):
     }
 
 def unsettledness_for(stone_mark, ownership, flattened_board):
-    unsettledness = lambda o: 1 - abs(o)
+    unsettledness = unsettledness_by_entropy if args['unsettledness_by_entropy'] else unsettledness_by_abs
     o_b_pairs = zip(ownership, flattened_board)
     return sum(unsettledness(o) for o, b in o_b_pairs if b == stone_mark)
+
+def unsettledness_by_abs(o):
+    return 1 - abs(o)
+
+def unsettledness_by_entropy(o):
+    q = (o + 1) / 2
+    return entropy_sub(q) + entropy_sub(1 - q)
+
+def entropy_sub(p):
+    return - p * math.log(p) if p > 0 else 0
 
 # for joiner
 
