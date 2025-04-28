@@ -39,6 +39,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=description)
     parser.add_argument('-default', metavar='JSON', help='default for missing fields in queries', required=False)
     parser.add_argument('-override', metavar='JSON', help='override queries', required=False)
+    parser.add_argument('-override-list', metavar='JSON', help='override queries for each setting', required=False)
     parser.add_argument('-default-komi', metavar='KOMI', type=float, help='equivalent to specification in -default', required=False)
     parser.add_argument('-default-rules', metavar='RULES', help='equivalent to specification in -default', required=False)
     parser.add_argument('-komi', type=float, help='equivalent to specification in -override', required=False)
@@ -75,6 +76,8 @@ if __name__ == "__main__":
             override[key] = val
     if args['include_policy'] :
         override['includePolicy'] = True
+    override_orig = override
+    override_list = parse_json(args['override_list'] or '[{}]')
     for key in ['komi', 'rules']:
         val = args['default_' + key]
         if val is not None:
@@ -761,14 +764,16 @@ def terminate_all_queries(process):
 is_input_finished = False
 
 def read_queries(katago_process, sorter, thread_condition):
-    global is_input_finished, total_queries, processed_queries
+    global is_input_finished, total_queries, processed_queries, override
     if args['sequentially']:
         input_lines = sys.stdin
     else:
         input_lines = sys.stdin.readlines()
         total_queries = len(input_lines)
     for k, line in enumerate(input_lines):
-        cook_input_line(line, katago_process, sorter, thread_condition)
+        for o in override_list:
+            override = override_orig | o
+            cook_input_line(line, katago_process, sorter, thread_condition)
         processed_queries = k + 1
     total_queries = processed_queries  # for -sequentially
     is_input_finished = True

@@ -180,6 +180,7 @@ If the option `-order join` is given, katawrap reports a joined response for eac
 
 * -default JSON: Use this for missing fields in queries. (ex.) '{"komi": 5.5, "includePolicy": true}'
 * -override JSON: Override queries.
+* -override-list JSON: Override queries for each setting. JSON must be a list like `[{"komi": 7.5}, {"komi": 0}]`. In this case, each input line is processed twice: once with `komi=7.5` and once with `komi=0`.
 * -order ORDER: One of `arrival`, `sort` (default), or `join`.
   * `arrival`: Do not sort the responses.
   * `sort`: Sort the responses in the order of requests and turn numbers.
