@@ -50,6 +50,7 @@ if __name__ == "__main__":
     parser.add_argument('-every', metavar='ANALYZE_TURNS_EVERY', type=int, help='equivalent to specification in -override', required=False)
     parser.add_argument('-last', action='store_true', help='equivalent to specification in -override')
     parser.add_argument('-include-policy', action='store_true', help='equivalent to specification in -override')
+    parser.add_argument('-scan-humansl-ranks', action='store_true', help='scan humanSLProfile rank_*')
     parser.add_argument('-order', help='"arrival", "sort" (default), or "join"', default='sort', required=False)
     parser.add_argument('-extra', help='"normal", "rich", or "excess" (default)', default='excess', required=False)
     parser.add_argument('-max-requests', type=int, help='suspend sending queries when pending requests exceeds this number (0 = unlimited)', default=1000, required=False)
@@ -77,7 +78,20 @@ if __name__ == "__main__":
     if args['include_policy'] :
         override['includePolicy'] = True
     override_orig = override
-    override_list = parse_json(args['override_list'] or '[{}]')
+    override_list = parse_json(args['override_list'] or '[]')
+    if args['scan_humansl_ranks']:
+        override_list += [
+            {
+                'maxVisits': 1,
+                'includePolicy': True,
+                'overrideSettings': {'humanSLProfile': f'rank_{r}'},
+            }
+            for r in
+            [f'{i}d' for i in reversed(range(1, 10))] +
+            [f'{i}k' for i in range(1, 21)]
+        ]
+    if not override_list:
+        override_list = [{}]
     for key in ['komi', 'rules']:
         val = args['default_' + key]
         if val is not None:
