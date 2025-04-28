@@ -379,9 +379,14 @@ def cook_unsettledness(req, res):
         return
     board = res.get('board') or board_from_query(req)
     cook_unsettledness_sub(res, board)
+    for info in res['moveInfos']:
+        board1 = info.get('board') or board_for_info(req, res, info, base_board=board)
+        cook_unsettledness_sub(info, board1)
 
 def cook_unsettledness_sub(res, board):
-    ownership = res['ownership']
+    ownership = res.get('ownership')
+    if ownership is None:
+        return
     calculators = (
         calculate_unsettledness,
         calculate_moyo,
