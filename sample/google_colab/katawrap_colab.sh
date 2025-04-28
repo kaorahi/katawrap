@@ -29,6 +29,8 @@ $myname: Setup KataGo and run katawrap on Google Colaboratory
         Download and setup KataGo.
     $myname run [ARGS...]
         Run "katawrap.py ARGS... katago ...".
+    $myname katago [ARGS...]
+        Run "katago ... ARGS...".
     $myname help
         Show this message
 (Example)
@@ -97,6 +99,10 @@ run () {
     $KATAWRAP "$@" $KATAGO analysis -config $CONFIG
 }
 
+katago () {
+    $KATAGO analysis -config $CONFIG "$@"
+}
+
 #############################################
 # args
 
@@ -119,6 +125,9 @@ if [ "$mode" = "setup" ]; then
 elif [ "$mode" = "run" ]; then
     exit_unless_colab
     run "$@"
+elif [ "$mode" = "katago" ]; then
+    exit_unless_colab
+    katago "$@"
 else
     usage
     exit 0
