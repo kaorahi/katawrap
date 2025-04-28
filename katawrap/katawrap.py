@@ -367,7 +367,9 @@ def board_for_info(req, res, info, base_board=None):
     return board_after_move(move, board)
 
 def cook_board_in_info(req, res):
-    if res.get('board'):
+    # add "boad" into each element of "moveInfos" only when includeOwnership
+    # is true because of too large overhead in the output size
+    if req['includeOwnership'] and res.get('board'):
         for info in res['moveInfos']:
             info['board'] = board_for_info(req, res, info)
 
