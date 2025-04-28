@@ -360,6 +360,7 @@ def cook_unsettledness(req, res):
     if req.get('includeUnsettledness'):
         board = res.get('board') or board_from_query(req)
         res.update(calculate_unsettledness(res['ownership'], board))
+        res.update(calculate_moyo(res['ownership'], board))
 
 def calculate_unsettledness(ownership, board):
     flattened_board = sum(board, [])
@@ -386,6 +387,22 @@ def unsettledness_by_entropy(o):
 
 def entropy_sub(p):
     return - p * math.log(p) if p > 0 else 0
+
+def calculate_moyo(ownership, board):
+    flattened_board = sum(board, [])
+    fs = (black_moyo_func, white_moyo_func)
+    b, w = (ownership_based_feature(f, '.', ownership, flattened_board) for f in fs)
+    return {
+        'blackMoyo': b,
+        'whiteMoyo': w,
+    }
+
+def black_moyo_func(o):
+    threshold = 1/3
+    return o if 0 <= o <= threshold else 0
+
+def white_moyo_func(o):
+    return black_moyo_func(- o)
 
 # for joiner
 
