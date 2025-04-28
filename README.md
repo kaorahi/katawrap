@@ -187,7 +187,7 @@ If the option `-order join` is given, katawrap reports a joined response for eac
   * `normal`: Only report the fields in responses of original KataGo.
   * `rich`: Add extra fields to responses.
   * `excess`: In addition to `rich`, copy the contents of some fields directly under the response. See the previous section for details.
-* -max-requests MAX_REQUESTS: Suspend sending queries when pending requests exceeds this number. (default = 1000)
+* -max-requests MAX_REQUESTS: Suspend sending queries when pending requests exceeds this number. (0 for "unlimited". default = 1000)
 * -sequentially: Do not read all input lines at once. This may be needed for very large inputs. In exchange, the progress message becomes somewhat unfriendly.
 * -only-last: Analyze only the last turn when analyzeTurns is missing.
 * -disable-sgf-file: Do not support sgfFile in query.

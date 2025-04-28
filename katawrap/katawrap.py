@@ -50,7 +50,7 @@ if __name__ == "__main__":
     parser.add_argument('-last', action='store_true', help='equivalent to specification in -override')
     parser.add_argument('-order', help='"arrival", "sort" (default), or "join"', default='sort', required=False)
     parser.add_argument('-extra', help='"normal", "rich", or "excess" (default)', default='excess', required=False)
-    parser.add_argument('-max-requests', type=int, help='suspend sending queries when pending requests exceeds this number', default=1000, required=False)
+    parser.add_argument('-max-requests', type=int, help='suspend sending queries when pending requests exceeds this number (0 = unlimited)', default=1000, required=False)
     parser.add_argument('-sequentially', action='store_true', help='do not read all input lines at once')
     parser.add_argument('-only-last', action='store_true', help='analyze only the last turn when analyzeTurns is missing')
     parser.add_argument('-disable-sgf-file', action='store_true', help='do not support sgfFile in query')
@@ -556,13 +556,17 @@ def make_sorter():
     order = args['order']
     sorter = Sorter(
         sort=(order != 'arrival'),
-        max_requests=args['max_requests'],
+        max_requests=max_requests(),
         corresponding=same_by(['id', 'turnNumber']),
         error_reporter=warn,
         join_pairs=join_pairs if (order == 'join') else None,
         cook_successive_pairs=cook_successive_pairs if (order != 'arrival') else None,
     )
     return sorter
+
+def max_requests():
+    m = args['max_requests']
+    return m if m > 0 else math.inf
 
 ##############################################
 # katago process
