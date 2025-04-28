@@ -6,6 +6,9 @@ def find_if(lis, pred):
     hit = [z for z in lis if pred(z)]
     return hit[0] if hit else None
 
+def flatten(list_of_list):
+    return sum(list_of_list, [])
+
 def nop(*args):
     return None
 

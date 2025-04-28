@@ -23,7 +23,7 @@ import uuid
 
 from sorter import Sorter
 from board import board_from_moves
-from util import find_if, warn, parse_json, merge_dict, is_executable
+from util import find_if, flatten, warn, parse_json, merge_dict, is_executable
 
 from katrain.sgf_parser import SGF
 
@@ -382,8 +382,7 @@ def calculate_unsettledness(ownership, board):
     }
 
 def ownership_based_feature(f, stone_mark, ownership, board):
-    flattened_board = sum(board, [])
-    o_b_pairs = zip(ownership, flattened_board)
+    o_b_pairs = zip(ownership, flatten(board))
     return sum(f(o) for o, b in o_b_pairs if b == stone_mark)
 
 def unsettledness_by_abs(o):
@@ -427,13 +426,12 @@ def white_settled_territory_func(o):
     return black_settled_territory_func(- o)
 
 def calculate_ownership_distribution(ownership, board):
-    flattened_board = sum(board, [])
     divide = ownership_distribution_idx(1.0) + 1
     z = lambda: [0] * divide
     counts = {'X': z(), 'O': z(), '.': z()}
-    for o, b in zip(ownership, flattened_board):
+    for o, b in zip(ownership, flatten(board)):
         counts[b][ownership_distribution_idx(o)] += 1
-    a = sum([counts[c] for c in ('X', 'O', '.')], [])
+    a = flatten([counts[c] for c in ('X', 'O', '.')])
     return {
         'ownershipDistribution': a
     }
