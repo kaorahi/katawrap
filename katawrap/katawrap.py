@@ -568,6 +568,9 @@ def max_requests():
     m = args['max_requests']
     return m if m > 0 else math.inf
 
+def has_requests_limit():
+    return max_requests() < math.inf
+
 ##############################################
 # katago process
 
@@ -611,9 +614,9 @@ def read_queries(katago_process, sorter, thread_condition):
 def cook_input_line(raw_line, katago_process, sorter, thread_condition):
     line = raw_line.strip()
     debug_print(f"(from STDIN): {line}")
-    with thread_condition:
-        thread_condition.wait_for(sorter.has_room)
-        js = cook_query_json(line, sorter)
+    push_to_sorter = lambda: cook_query_json(line, sorter)
+    wait_for_room = lambda tc: tc.wait_for(sorter.has_room)
+    js = with_thread_condition(push_to_sorter, wait_for_room, thread_condition)
     for j in js:
         send_to_katago(j, katago_process)
 
@@ -631,12 +634,19 @@ def do_read_responses(katago_process, sorter, thread_condition):
         if not line:
             continue
         debug_print(f"(from KATAGO): {line}")
-        with thread_condition:
-            js = cook_response_json(line, sorter)
-            thread_condition.notify()
+        pop_from_sorter = lambda: cook_response_json(line, sorter)
+        notify = lambda tc: tc.notify()
+        js = with_thread_condition(pop_from_sorter, notify, thread_condition)
         for j in js:
             print(j)
         sys.stdout.flush()
+
+def with_thread_condition(cooker, checker, thread_condition):
+    if not has_requests_limit():
+        return cooker()
+    with thread_condition:
+        checker(thread_condition)
+        return cooker()
 
 # progress: [progress thread] ==> STDERR
 
@@ -668,7 +678,7 @@ def main():
 def initialize():
     katago_process = start_katago()
     sorter = make_sorter()
-    thread_condition = threading.Condition()
+    thread_condition = threading.Condition() if has_requests_limit() else None
     response_thread = threading.Thread(
         target=read_responses,
         args=(katago_process, sorter, thread_condition),
