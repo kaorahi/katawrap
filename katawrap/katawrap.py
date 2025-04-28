@@ -22,7 +22,7 @@ import time
 import uuid
 
 from sorter import Sorter
-from board import board_from_moves
+from board import board_from_moves, board_after_move
 from util import find_if, flatten, warn, parse_json, merge_dict, is_executable
 
 from katrain.sgf_parser import SGF
@@ -307,6 +307,7 @@ def expand_query_turns(query):
 def cook_pair(req, res):
     sort_move_infos(req, res)
     add_extra_response(req, res)
+    cook_board_in_info(req, res)
     cook_unsettledness(req, res)
 
 def sort_move_infos(req, res):
@@ -358,6 +359,17 @@ def next_move_etc(req, res):
 def board_from_query(req):
     moves = req['moves'][0:req['turnNumber']]
     return board_from_moves(moves, req['boardXSize'], req['boardYSize'])
+
+def board_for_info(req, res, info, base_board=None):
+    board = base_board or res.get('board') or board_from_query(req)
+    player = res['rootInfo']['currentPlayer']
+    move = [player, info['move']]
+    return board_after_move(move, board)
+
+def cook_board_in_info(req, res):
+    if res.get('board'):
+        for info in res['moveInfos']:
+            info['board'] = board_for_info(req, res, info)
 
 def cook_unsettledness(req, res):
     # This is separated from add_extra_response so that one can disable

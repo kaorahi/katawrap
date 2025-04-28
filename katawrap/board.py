@@ -24,6 +24,11 @@ def board_from_moves(moves, x_size, y_size):
     stones = stones_from_history(moves, y_size, x_size)
     return aa_map(stones, letter_for_stone)
 
+def board_after_move(move, board):
+    xsize = len(board[0])
+    ysize = len(board)
+    return board_from_moves([move], xsize, ysize, init_board=board)
+
 def board_to_str(board):
     return '\n'.join([''.join(row) for row in board])
 
