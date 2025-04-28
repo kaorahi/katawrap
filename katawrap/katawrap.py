@@ -370,7 +370,14 @@ def next_move_etc(req, res):
     }
     hit = find_if(res['moveInfos'], lambda z: z['move'] == next_move)
     if hit:
-        ret['nextMoveRank'] = hit['order']
+        keys = {
+            'nextMoveRank': 'order',
+            'nextMovePrior': 'prior',
+            'nextMoveHumanPrior': 'humanPrior',
+        }
+        for k, v in keys.items():
+            if v in hit:
+                ret[k] = hit[v]
     return ret
 
 def board_from_query(req):
