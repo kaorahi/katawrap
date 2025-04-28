@@ -170,6 +170,7 @@ Even more fields are added redundantly for '-extra excess'. This is the default.
 * `nextRootInfo`: Copy of the rootInfo of the next turn if it exists.
 * All fields in `rootInfo` and `query` are also copied directly under the response. This enables easy access in pandas and jq (`{turnNumber, winrate}` instead of `{turnNumber, winrate: .rootInfo.winrate}`).
 * If exists, all fields in `sgfProp` are copied similarly. List elements are joined to one string for convenience, e.g., `"PB": "Shusaku", "BR": "4d", "PW": "Inseki", "WR": "8d", "RE": "B+2"`.
+* If exists, the following fields are copied into `rootInfo`: `blackUnsettledness`, `whiteUnsettledness`, `territoryUnsettledness`, `unsettledness`, `blackMoyo`, `whiteMoyo`. They also appear in `nextRootInfo`.
 
 `moveInfos` is guaranteed to be sorted by `order`.
 

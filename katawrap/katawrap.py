@@ -306,9 +306,9 @@ def expand_query_turns(query):
 
 def cook_pair(req, res):
     sort_move_infos(req, res)
-    add_extra_response(req, res)
     cook_board_in_info(req, res)
     cook_unsettledness(req, res)
+    add_extra_response(req, res)
 
 def sort_move_infos(req, res):
     res['moveInfos'].sort(key=lambda z: z['order'])
@@ -329,7 +329,22 @@ def rich_response(req, res):
     return rich
 
 def excessive_response(req, res):
-    return merge_dict(req, cooked_sgf_prop(req), res['rootInfo'])
+    root_info = res['rootInfo']
+    res['rootInfo'] = extended_root_info(res)
+    return merge_dict(req, cooked_sgf_prop(req), root_info)
+
+def extended_root_info(res):
+    keys = [
+        'blackUnsettledness',
+        'whiteUnsettledness',
+        'territoryUnsettledness',
+        'unsettledness',
+        'blackMoyo',
+        'whiteMoyo',
+    ]
+    root_info = res['rootInfo']
+    additional = {k: res[k] for k in keys if k in res}
+    return merge_dict(root_info, additional)
 
 def cooked_sgf_prop(req):
     sgf_prop = req.get('sgfProp')
