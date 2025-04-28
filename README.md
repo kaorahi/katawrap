@@ -148,7 +148,7 @@ Aliases are also accepted:
 
 ### <a name="responses"></a>Extension of responses
 
-Responses are sorted in the order of requests and turn numbers by default. This feature is disabled by the option `-order arrival`.
+Responses are sorted by request order and turn numbers by default, making it easier to resume analysis after an accidental interruption without the hassle of reorganizing incomplete results. This feature can be disabled using the option -order arrival.
 
 The fields in responses are extended depending on the value of the option `-extra`. They are KataGo-compatible for `-extra normal`. Several fields are added for `-extra rich`:
 
