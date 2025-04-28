@@ -1,3 +1,5 @@
+import json
+
 from util import find_if, nop
 from joiner import Joiner
 
@@ -57,6 +59,12 @@ class Sorter:
         for req in requests:
             self._req_pool.remove(req)
         return requests
+
+    def dump_requests(self):
+        return ''.join([json.dumps(h) + '\n' for h in self._req_pool])
+
+    def undump_requests(self, dumped):
+        self._req_pool = [json.loads(s) for s in dumped.strip().split('\n')]
 
     # available request-response pairs
 

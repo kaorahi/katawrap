@@ -54,6 +54,8 @@ if __name__ == "__main__":
     parser.add_argument('-sequentially', action='store_true', help='do not read all input lines at once')
     parser.add_argument('-only-last', action='store_true', help='analyze only the last turn when analyzeTurns is missing')
     parser.add_argument('-disable-sgf-file', action='store_true', help='do not support sgfFile in query')
+    parser.add_argument('-suspend-to', metavar='PATH', help='use pre-post wrapping like "katawrap.py -suspend-to PATH | katago | katawrap.py -resume-from PATH"', default=None, required=False)
+    parser.add_argument('-resume-from', metavar='PATH', help='use pre-post wrapping like "katawrap.py -suspend-to PATH | katago | katawrap.py -resume-from PATH"', default=None, required=False)
     parser.add_argument('-netcat', action='store_true', help='use this option when netcat (nc) is used as katago command')
     parser.add_argument('-silent', action='store_true', help='do not print progress info to stderr')
     parser.add_argument('-debug', action='store_true', help='print debug info to stderr')
@@ -74,7 +76,7 @@ if __name__ == "__main__":
             default[key] = val
     katago_command = args['katago-command']
 
-    if not katago_command:
+    if not (katago_command or args['suspend_to'] or args['resume_from']):
         parser.print_help(sys.stderr)
         exit(1)
 
@@ -554,6 +556,7 @@ def debug_print(message):
 
 def make_sorter():
     order = args['order']
+    dumped = args['resume_from']
     sorter = Sorter(
         sort=(order != 'arrival'),
         max_requests=max_requests(),
@@ -562,6 +565,9 @@ def make_sorter():
         join_pairs=join_pairs if (order == 'join') else None,
         cook_successive_pairs=cook_successive_pairs if (order != 'arrival') else None,
     )
+    if dumped:
+        with open(dumped, 'r') as f:
+            sorter.undump_requests(f.read())
     return sorter
 
 def max_requests():
@@ -583,6 +589,9 @@ def start_katago():
     )
 
 def send_to_katago(line, process):
+    if process is None:
+        print(line)
+        return
     debug_print(f"(to KATAGO): {line}")
     process.stdin.write((line + '\n').encode())
     process.stdin.flush()
@@ -629,8 +638,10 @@ def read_responses(katago_process, sorter, thread_condition):
         warn('BrokenPipe in response thread')
 
 def do_read_responses(katago_process, sorter, thread_condition):
+    read_line = lambda: katago_process.stdout.readline().decode().strip() if katago_process else sys.stdin.readline().strip()
+    source = katago_process.stdout if katago_process else sys.stdin
     while in_progress(katago_process, sorter):
-        line = katago_process.stdout.readline().decode().strip()
+        line = read_line()
         if not line:
             continue
         debug_print(f"(from KATAGO): {line}")
@@ -642,7 +653,7 @@ def do_read_responses(katago_process, sorter, thread_condition):
         sys.stdout.flush()
 
 def with_thread_condition(cooker, checker, thread_condition):
-    if not has_requests_limit():
+    if not (has_requests_limit() and thread_condition):
         return cooker()
     with thread_condition:
         checker(thread_condition)
@@ -656,7 +667,7 @@ def show_progress_periodically(sec, katago_process, sorter):
        time.sleep(sec)
 
 def in_progress(katago_process, sorter):
-    alive =  katago_process.poll() is None
+    alive = katago_process.poll() is None if katago_process else True
     done = is_input_finished and not sorter.has_requests()
     return alive and not done
 
@@ -664,31 +675,50 @@ def in_progress(katago_process, sorter):
 # run
 
 def main():
+    global is_input_finished
     interrupted = False
     katago_process, response_thread, sorter, thread_condition = initialize()
     try:
+        if args['resume_from'] is not None:
+            is_input_finished = True
+            read_responses(katago_process, sorter, thread_condition)
+            return
         read_queries(katago_process, sorter, thread_condition)
-        response_thread.join()
+        if response_thread:
+            response_thread.join()
+        else:
+            dump_sorter(sorter, args['suspend_to'])
     except KeyboardInterrupt:
         interrupted = True
     finally:
         print_progress(sorter)
         finalize(katago_process, interrupted)
 
+def dump_sorter(sorter, path):
+    if path is None:
+        return
+    with open(path, 'w') as f:
+        f.write(sorter.dump_requests())
+
 def initialize():
-    katago_process = start_katago()
+    needs_katago = args['suspend_to'] is None and args['resume_from'] is None
+    needs_thread_condition = needs_katago and has_requests_limit()
+    katago_process = None
+    response_thread = None
     sorter = make_sorter()
-    thread_condition = threading.Condition() if has_requests_limit() else None
-    response_thread = threading.Thread(
-        target=read_responses,
-        args=(katago_process, sorter, thread_condition),
-        daemon=True,
-    )
-    response_thread.start()
+    thread_condition = threading.Condition() if needs_thread_condition else None
+    if needs_katago:
+        katago_process = start_katago()
+        response_thread = threading.Thread(
+            target=read_responses,
+            args=(katago_process, sorter, thread_condition),
+            daemon=True,
+        )
+        response_thread.start()
     if not args['silent']:
         progress_sec = 1
         start_progress_thread(progress_sec, katago_process, sorter)
-    if args['netcat']:
+    if args['netcat'] and needs_katago:
         # cancel requests by previous client for safety
         terminate_all_queries(katago_process)
     return (katago_process, response_thread, sorter, thread_condition)
@@ -702,6 +732,9 @@ def start_progress_thread(sec, katago_process, sorter):
     progress_thread.start()
 
 def finalize(katago_process, interrupted):
+    if katago_process is None:
+        finish_print_progress(interrupted)
+        return
     try:
         katago_process.stdin.close()
         katago_process.kill()
