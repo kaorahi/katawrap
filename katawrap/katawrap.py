@@ -362,6 +362,7 @@ def cook_unsettledness(req, res):
         res.update(calculate_unsettledness(res['ownership'], board))
         res.update(calculate_moyo(res['ownership'], board))
         res.update(calculate_settled_territory(res['ownership'], board))
+        res.update(calculate_ownership_distribution(res['ownership'], board))
 
 def calculate_unsettledness(ownership, board):
     flattened_board = sum(board, [])
@@ -420,6 +421,24 @@ def black_settled_territory_func(o):
 
 def white_settled_territory_func(o):
     return black_settled_territory_func(- o)
+
+def calculate_ownership_distribution(ownership, board):
+    flattened_board = sum(board, [])
+    divide = ownership_distribution_idx(1.0) + 1
+    z = lambda: [0] * divide
+    counts = {'X': z(), 'O': z(), '.': z()}
+    for o, b in zip(ownership, flattened_board):
+        counts[b][ownership_distribution_idx(o)] += 1
+    a = sum([counts[c] for c in ('X', 'O', '.')], [])
+    return {
+        'ownershipDistribution': a
+    }
+
+def ownership_distribution_idx(o):
+    divide = 10
+    exponent = 1  # be careful for the sign of o!
+    o = o ** exponent
+    return min(int((o + 1) * divide / 2), divide - 1)
 
 # for joiner
 
