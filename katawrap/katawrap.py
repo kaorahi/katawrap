@@ -371,10 +371,9 @@ def cook_unsettledness(req, res):
         res.update(calculate_ownership_distribution(res['ownership'], board))
 
 def calculate_unsettledness(ownership, board):
-    flattened_board = sum(board, [])
     board_marks = ('X', 'O', '.')
     f = unsettledness_by_entropy if args['unsettledness_by_entropy'] else unsettledness_by_abs
-    b, w, t = (ownership_based_feature(f, c, ownership, flattened_board) for c in board_marks)
+    b, w, t = (ownership_based_feature(f, c, ownership, board) for c in board_marks)
     return {
         'blackUnsettledness': b,
         'whiteUnsettledness': w,
@@ -382,7 +381,8 @@ def calculate_unsettledness(ownership, board):
         'unsettledness': b + w,
     }
 
-def ownership_based_feature(f, stone_mark, ownership, flattened_board):
+def ownership_based_feature(f, stone_mark, ownership, board):
+    flattened_board = sum(board, [])
     o_b_pairs = zip(ownership, flattened_board)
     return sum(f(o) for o, b in o_b_pairs if b == stone_mark)
 
@@ -397,9 +397,8 @@ def entropy_sub(p):
     return - p * math.log(p) if p > 0 else 0
 
 def calculate_moyo(ownership, board):
-    flattened_board = sum(board, [])
     fs = (black_moyo_func, white_moyo_func)
-    b, w = (ownership_based_feature(f, '.', ownership, flattened_board) for f in fs)
+    b, w = (ownership_based_feature(f, '.', ownership, board) for f in fs)
     return {
         'blackMoyo': b,
         'whiteMoyo': w,
@@ -413,9 +412,8 @@ def white_moyo_func(o):
     return black_moyo_func(- o)
 
 def calculate_settled_territory(ownership, board):
-    flattened_board = sum(board, [])
     fs = (black_settled_territory_func, white_settled_territory_func)
-    b, w = (ownership_based_feature(f, '.', ownership, flattened_board) for f in fs)
+    b, w = (ownership_based_feature(f, '.', ownership, board) for f in fs)
     return {
         'blackSettledTerritory': b,
         'whiteSettledTerritory': w,
