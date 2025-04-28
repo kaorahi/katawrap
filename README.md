@@ -205,6 +205,7 @@ The following options are equivalent to `-override`, e.g., `-komi 5.5` = `-overr
 * -to ANALYZE_TURNS_TO
 * -every ANALYZE_TURNS_EVERY
 * -last
+* -include-policy
 
 Similarly, the following options are equivalent to `-default`.
 

@@ -25,7 +25,7 @@ from sorter import Sorter
 from board import board_from_moves, board_after_move
 from util import find_if, flatten, warn, parse_json, merge_dict, is_executable
 
-from katrain.sgf_parser import SGF
+from katrain.sgf_parser import SGF, Move
 
 ##############################################
 # parse args
@@ -48,6 +48,7 @@ if __name__ == "__main__":
     parser.add_argument('-to', metavar='ANALYZE_TURNS_TO', type=int, help='equivalent to specification in -override', required=False)
     parser.add_argument('-every', metavar='ANALYZE_TURNS_EVERY', type=int, help='equivalent to specification in -override', required=False)
     parser.add_argument('-last', action='store_true', help='equivalent to specification in -override')
+    parser.add_argument('-include-policy', action='store_true', help='equivalent to specification in -override')
     parser.add_argument('-order', help='"arrival", "sort" (default), or "join"', default='sort', required=False)
     parser.add_argument('-extra', help='"normal", "rich", or "excess" (default)', default='excess', required=False)
     parser.add_argument('-max-requests', type=int, help='suspend sending queries when pending requests exceeds this number (0 = unlimited)', default=1000, required=False)
@@ -72,6 +73,8 @@ if __name__ == "__main__":
         val = args[key]
         if val is not None:
             override[key] = val
+    if args['include_policy'] :
+        override['includePolicy'] = True
     for key in ['komi', 'rules']:
         val = args['default_' + key]
         if val is not None:
@@ -368,6 +371,17 @@ def next_move_etc(req, res):
         'nextMoveColor': next_move_color,
         'nextMoveSign': next_move_sign,
     }
+    # policy
+    policy_table = {
+        'nextMovePrior': 'policy',
+        'nextMoveHumanPrior': 'humanPolicy',
+    }
+    idx = policy_index(next_move, req['boardXSize'], req['boardYSize'])
+    for k, v in policy_table.items():
+        p = res.get(v)
+        if p is not None:
+            ret[k] = p[idx]
+    # moveInfos
     hit = find_if(res['moveInfos'], lambda z: z['move'] == next_move)
     if hit:
         keys = {
@@ -379,6 +393,20 @@ def next_move_etc(req, res):
             if v in hit:
                 ret[k] = hit[v]
     return ret
+
+def policy_index(move, xsize, ysize):
+    coords = Move.from_gtp(move).coords
+    if coords is None:
+        return -1
+    else:
+        # >>> from sgf_parser import Move
+        # >>> Move.from_gtp('A19').coords
+        # (0, 18)
+        # >>> Move.from_gtp('T1').coords
+        # (18, 0)
+        x, y = coords
+        # top-left (A19) = 0, bottom-right (T1) = 360
+        return x + (ysize - y - 1) * xsize
 
 def board_from_query(req):
     moves = req['moves'][0:req['turnNumber']]
