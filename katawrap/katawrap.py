@@ -361,6 +361,7 @@ def cook_unsettledness(req, res):
         board = res.get('board') or board_from_query(req)
         res.update(calculate_unsettledness(res['ownership'], board))
         res.update(calculate_moyo(res['ownership'], board))
+        res.update(calculate_settled_territory(res['ownership'], board))
 
 def calculate_unsettledness(ownership, board):
     flattened_board = sum(board, [])
@@ -403,6 +404,22 @@ def black_moyo_func(o):
 
 def white_moyo_func(o):
     return black_moyo_func(- o)
+
+def calculate_settled_territory(ownership, board):
+    flattened_board = sum(board, [])
+    fs = (black_settled_territory_func, white_settled_territory_func)
+    b, w = (ownership_based_feature(f, '.', ownership, flattened_board) for f in fs)
+    return {
+        'blackSettledTerritory': b,
+        'whiteSettledTerritory': w,
+    }
+
+def black_settled_territory_func(o):
+    exponent = 3.0
+    return o ** exponent if o >= 0 else 0
+
+def white_settled_territory_func(o):
+    return black_settled_territory_func(- o)
 
 # for joiner
 
