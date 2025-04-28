@@ -363,9 +363,10 @@ def cook_unsettledness(req, res):
     # This is separated from add_extra_response so that one can disable
     # it individually. Note that unsettledness needs ownership,
     # that incurs some performance overhead.
-    if req.get('includeUnsettledness'):
-        board = res.get('board') or board_from_query(req)
-        cook_unsettledness_sub(res, board)
+    if not req.get('includeUnsettledness'):
+        return
+    board = res.get('board') or board_from_query(req)
+    cook_unsettledness_sub(res, board)
 
 def cook_unsettledness_sub(res, board):
     ownership = res['ownership']
