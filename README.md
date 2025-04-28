@@ -235,7 +235,7 @@ Never consider to open "public katawrap server" as it accesses local files and m
 
 ### <a name="tips"></a>Tips (KataGo server)
 
-You may want local KataGo server to save startup time when you use katawrap repeatedly. See `man netcat` for an easiest way on Linux (`apt install netcat` in Debian-based distributions). Example:
+You may want local KataGo server to save startup time when you use katawrap repeatedly. See `man netcat` for an easiest way on Linux (`apt install netcat-openbsd` in Debian-based distributions). Example:
 
 (server)
 
