@@ -23,7 +23,7 @@ import uuid
 
 from sorter import Sorter
 from board import board_from_moves
-from util import find_if, warn, parse_json, merge_dict
+from util import find_if, warn, parse_json, merge_dict, is_executable
 
 from katrain.sgf_parser import SGF
 
@@ -676,6 +676,7 @@ def in_progress(katago_process, sorter):
 
 def main():
     global is_input_finished
+    exit_if_dangerous()
     interrupted = False
     katago_process, response_thread, sorter, thread_condition = initialize()
     try:
@@ -693,6 +694,13 @@ def main():
     finally:
         print_progress(sorter)
         finalize(katago_process, interrupted)
+
+def exit_if_dangerous():
+    path = args['suspend_to']
+    overwriting_exe = path is not None and is_executable(path)
+    if overwriting_exe:
+        print(f"You are trying to overwrite an executable file! ({path})\nAbort.", file=sys.stderr)
+        exit(1)
 
 def dump_sorter(sorter, path):
     if path is None:

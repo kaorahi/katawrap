@@ -1,5 +1,6 @@
 import json
 import sys
+import os
 
 def find_if(lis, pred):
     hit = [z for z in lis if pred(z)]
@@ -26,3 +27,6 @@ def merge_dict(*args):
     for d in args:
         ret.update(d)
     return ret
+
+def is_executable(path):
+    return os.path.exists(path) and bool(os.stat(path).st_mode & 0o111)
