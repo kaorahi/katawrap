@@ -215,7 +215,7 @@ def cook_analyze_turns_every(query):
 def fix_analyze_turns(query):
     orig = query.get('analyzeTurns') or []
     n = len(query['moves'])
-    if query.get('analyzeLastTurn'):
+    if query.pop('analyzeLastTurn', False):
         turns = append_if_missing(orig, n)
     elif orig:
         turns = orig
