@@ -365,10 +365,18 @@ def cook_unsettledness(req, res):
     # that incurs some performance overhead.
     if req.get('includeUnsettledness'):
         board = res.get('board') or board_from_query(req)
-        res.update(calculate_unsettledness(res['ownership'], board))
-        res.update(calculate_moyo(res['ownership'], board))
-        res.update(calculate_settled_territory(res['ownership'], board))
-        res.update(calculate_ownership_distribution(res['ownership'], board))
+        cook_unsettledness_sub(res, board)
+
+def cook_unsettledness_sub(res, board):
+    ownership = res['ownership']
+    calculators = (
+        calculate_unsettledness,
+        calculate_moyo,
+        calculate_settled_territory,
+        calculate_ownership_distribution,
+    )
+    for calc in calculators:
+        res.update(calc(ownership, board))
 
 def calculate_unsettledness(ownership, board):
     board_marks = ('X', 'O', '.')
