@@ -61,6 +61,7 @@ if __name__ == "__main__":
     parser.add_argument('-silent', action='store_true', help='do not print progress info to stderr')
     parser.add_argument('-debug', action='store_true', help='print debug info to stderr')
     parser.add_argument('-unsettledness-by-entropy', action='store_true', help='experimental (undocumented)')
+    parser.add_argument('-soft-moyo', action='store_true', help='experimental (undocumented)')
     parser.add_argument('katago-command', metavar='KATAGO_COMMAND', help='(ex.) ./katago analysis -config analysis.cfg -model model.bin.gz', nargs=argparse.REMAINDER)
 
     args = vars(parser.parse_args())
@@ -447,8 +448,18 @@ def calculate_moyo(ownership, board):
     }
 
 def black_moyo_func(o):
+    f = black_soft_moyo_func if args['soft_moyo'] else black_hard_moyo_func
+    return f(o)
+
+def black_hard_moyo_func(o):
     threshold = 1/3
     return o if 0 <= o <= threshold else 0
+
+def black_soft_moyo_func(o):
+    power = 2
+    # compatible with lizgoban v0.8.0-pre3
+    # (23-07-14, draw_endstate_dist.js)
+    return o * (1 - o**power) if o > 0 else 0
 
 def white_moyo_func(o):
     return black_moyo_func(- o)
